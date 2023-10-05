@@ -1,2 +1,6 @@
 docker_builder:
-  build_script: docker build .
+  env:
+    GITHUB_TOKEN: ENCRYPTED[b9fc840abb3acc8b67824de3e20417357c6b83eaa2088d8c8a6ef90ad20a74b36614c353eb082ce695e2d07a509e2c09]
+  build_script: docker build -t ghcr.io/cheriot-platform/devcontainer:latest .
+  login_script: echo $GITHUB_TOKEN | docker login ghcr.io -u davidchisnall --password-stdin
+  push_script: docker push ghcr.io/cheriot-platform/devcontainer:latest
