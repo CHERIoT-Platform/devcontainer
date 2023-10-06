@@ -16,7 +16,7 @@ RUN cp sail-riscv/LICENCE /install/LICENCE-riscv-sail.txt
 
 FROM ubuntu:22.04 as llvm-download
 RUN apt update && apt install -y curl unzip
-RUN curl -O https://api.cirrus-ci.com/v1/artifact/github/CHERIoT-Platform/llvm-project/Build%20and%20upload%20artefact/binaries.zip
+RUN curl -O https://api.cirrus-ci.com/v1/artifact/github/CHERIoT-Platform/llvm-project/Build%20and%20upload%20artefact%20$(uname -p)/binaries.zip
 RUN unzip binaries.zip
 
 FROM ubuntu:22.04
