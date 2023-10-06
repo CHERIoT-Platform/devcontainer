@@ -2,7 +2,7 @@ FROM ubuntu:22.04 as sail-build
 RUN apt update && apt install -y opam z3 libgmp-dev cvc4 pkg-config zlib1g-dev make
 RUN opam init -y
 RUN test -r /root/.opam/opam-init/init.sh && . /root/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true
-RUN opam pin -y https://codeload.github.com/rems-project/sail/zip/refs/tags/0.15
+RUN opam pin -y sail 0.16
 RUN git clone --recurse https://github.com/microsoft/cheriot-sail.git
 WORKDIR cheriot-sail
 RUN git config --global user.name 'No One'
