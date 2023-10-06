@@ -1,14 +1,16 @@
-docker_builder:
+x86_docker_builder:
   env:
     GITHUB_TOKEN: ENCRYPTED[b9fc840abb3acc8b67824de3e20417357c6b83eaa2088d8c8a6ef90ad20a74b36614c353eb082ce695e2d07a509e2c09]
   build_script: docker build -t ghcr.io/cheriot-platform/devcontainer:latest .
+  smoketest_script: docker run --rm ghcr.io/cheriot-platform/devcontainer /bin/sh -c "cd /tmp/ && git clone --recurse http://github.com/Microsoft/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools && xmake && xmake run"
   login_script: echo $GITHUB_TOKEN | docker login ghcr.io -u davidchisnall --password-stdin
   push_script: docker push ghcr.io/cheriot-platform/devcontainer:latest
 
-docker_builder:
+arm_docker_builder:
   env:
     CIRRUS_ARCH: arm64
     GITHUB_TOKEN: ENCRYPTED[b9fc840abb3acc8b67824de3e20417357c6b83eaa2088d8c8a6ef90ad20a74b36614c353eb082ce695e2d07a509e2c09]
   build_script: docker build -t ghcr.io/cheriot-platform/devcontainer:latest .
+  smoketest_script: docker run --rm ghcr.io/cheriot-platform/devcontainer /bin/sh -c "cd /tmp/ && git clone --recurse http://github.com/Microsoft/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools && xmake && xmake run"
   login_script: echo $GITHUB_TOKEN | docker login ghcr.io -u davidchisnall --password-stdin
   push_script: docker push ghcr.io/cheriot-platform/devcontainer:latest
