@@ -27,22 +27,7 @@ RUN apt update \
     && apt install -y software-properties-common \
     && add-apt-repository ppa:xmake-io/xmake \
     && apt update \
-    && apt install -y $([ $(uname -p) == x86_64 ] && echo xmake ) git clang
-
-# The Ubuntu PPA for xmake ships only x86_64 packages.  For now, fall back to
-# installing manually.
-RUN if which xmake ; then echo xmake already installed ; else \
-        apt install make && \
-        git clone --recursive https://github.com/xmake-io/xmake.git && \
-        cd ./xmake  && \
-        git checkout v2.8.3 &&  \
-        ./configure  && \
-        make  && \
-        make install  && \
-        cd ..  && \
-        rm -rf xmake ;\
-     fi
-
+    && apt install -y xmake git clang
 
 # Create the user
 RUN useradd -m $USERNAME \
