@@ -24,4 +24,4 @@ final_docker_builder:
   login_script: echo $GITHUB_TOKEN | docker login ghcr.io -u davidchisnall --password-stdin
   manifest_script:
     - docker manifest create ghcr.io/cheriot-platform/devcontainer:latest --amend ghcr.io/cheriot-platform/devcontainer:x86_64-latest --amend ghcr.io/cheriot-platform/devcontainer:aarch64-latest
-    - docker manifest push ghcr.io/cheriot-platform/devcontainer:latest
+    - docker manifest push --purge ghcr.io/cheriot-platform/devcontainer:latest
