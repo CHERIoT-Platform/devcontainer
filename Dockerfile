@@ -33,7 +33,7 @@ RUN make install
 WORKDIR /
 RUN git clone --recurse https://github.com/microsoft/cheriot-safe.git
 WORKDIR cheriot-safe/sim/verilator
-RUN ./vgen
+RUN ./vgen_stdin
 RUN ./vcomp
 RUN cp obj_dir/Vswci_vtb /cheriot_ibex_safe_sim
 # Patch all.f to build with tracing
