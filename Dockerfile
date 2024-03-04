@@ -16,6 +16,14 @@ RUN apt update && apt install -y curl unzip
 RUN curl -O https://api.cirrus-ci.com/v1/artifact/github/CHERIoT-Platform/llvm-project/Build%20and%20upload%20artefact%20$(uname -p)/binaries.zip
 RUN unzip binaries.zip
 
+FROM ubuntu:22.04 as cheriot-audit
+RUN apt update && apt install -y git g++ ninja-build cmake
+RUN git clone https://github.com/CHERIoT-Platform/cheriot-audit
+RUN mkdir cheriot-audit/build
+WORKDIR cheriot-audit/build
+RUN cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release
+RUN ninja
+
 FROM ubuntu:22.04 as ibex-build
 # Ubuntu ships with a version of verilator that is too old.  Build our own version and use that.
 RUN apt update && apt install -y git help2man perl python3 make autoconf g++ flex bison ccache libgoogle-perftools-dev numactl perl-doc libfl2 libfl-dev zlib1g zlib1g-dev ed
@@ -67,6 +75,7 @@ COPY  --from=sail-build /install/cheriot_sim /cheriot-tools/bin/
 # Install the Ibex simulator.
 COPY  --from=ibex-build cheriot_ibex_safe_sim /cheriot-tools/bin/
 COPY  --from=ibex-build cheriot_ibex_safe_sim_trace /cheriot-tools/bin/
+COPY  --from=cheriot-audit /cheriot-audit/build/cheriot-audit /cheriot-tools/bin/
 # Install the LLVM tools
 RUN mkdir -p /cheriot-tools/bin
 COPY --from=llvm-download "/Build/install/bin/clang-13" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" /cheriot-tools/bin/
