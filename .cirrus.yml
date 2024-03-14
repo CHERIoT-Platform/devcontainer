@@ -1,6 +1,7 @@
 x86_docker_builder:
   env:
     GITHUB_TOKEN: ENCRYPTED[b9fc840abb3acc8b67824de3e20417357c6b83eaa2088d8c8a6ef90ad20a74b36614c353eb082ce695e2d07a509e2c09]
+  print_script: echo $CIRRUS_BRANCH
   build_script: docker build -t ghcr.io/cheriot-platform/devcontainer:x86_64-latest .
   smoketest_sail_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:x86_64-latest /bin/sh -c "cd /tmp/ && git clone --recurse http://github.com/Microsoft/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools && xmake && xmake run"
   smoketest_ibex_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:x86_64-latest /bin/sh -c "cd /tmp/ && git clone --recurse http://github.com/Microsoft/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools --board=ibex-safe-simulator && xmake && xmake run"
