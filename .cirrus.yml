@@ -16,7 +16,6 @@ arm_docker_builder:
   build_script: docker build -t ghcr.io/cheriot-platform/devcontainer:aarch64-latest .
   smoketest_sail_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:aarch64-latest /bin/sh -c "cd /tmp/ && git clone --recurse http://github.com/Microsoft/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools && xmake && xmake run"
   smoketest_ibex_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:aarch64-latest /bin/sh -c "cd /tmp/ && git clone --recurse http://github.com/Microsoft/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools --board=ibex-safe-simulator && xmake && xmake run"
-    only_if: $CIRRUS_BRANCH == 'main'
   login_script: |
     if [  "$CIRRUS_BRANCH" == 'main' ] ; then echo $GITHUB_TOKEN | docker login ghcr.io -u davidchisnall --password-stdin ; fi
   push_script: |
