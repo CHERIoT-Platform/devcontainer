@@ -6,11 +6,11 @@ x86_docker_builder:
   smoketest_ibex_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:x86_64-latest /bin/sh -c "cd /tmp/ && git clone --recurse http://github.com/Microsoft/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools --board=ibex-safe-simulator && xmake && xmake run"
   task:
     name: login
-    only_if: $CIRRUS_BRANCH == 'main'
+    skip: $CIRRUS_BRANCH != 'main'
     script: echo $GITHUB_TOKEN | docker login ghcr.io -u davidchisnall --password-stdin
   task:
     name: push
-    only_if: $CIRRUS_BRANCH == 'main'
+    skip: $CIRRUS_BRANCH != 'main'
     script: docker push ghcr.io/cheriot-platform/devcontainer:x86_64-latest
 
 arm_docker_builder:
@@ -22,11 +22,11 @@ arm_docker_builder:
   smoketest_ibex_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:aarch64-latest /bin/sh -c "cd /tmp/ && git clone --recurse http://github.com/Microsoft/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools --board=ibex-safe-simulator && xmake && xmake run"
   task:
     name: login
-    only_if: $CIRRUS_BRANCH == 'main'
+    skip: $CIRRUS_BRANCH != 'main'
     script: echo $GITHUB_TOKEN | docker login ghcr.io -u davidchisnall --password-stdin
   task:
     name: push
-    only_if: $CIRRUS_BRANCH == 'main'
+    skip: $CIRRUS_BRANCH != 'main'
     script: docker push ghcr.io/cheriot-platform/devcontainer:aarch64-latest
 
 final_docker_builder:
