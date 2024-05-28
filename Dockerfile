@@ -58,7 +58,10 @@ RUN apt update \
     && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" > /etc/apt/sources.list.d/nodesource.list \
     && add-apt-repository ppa:xmake-io/xmake \
     && apt update \
-    && apt install -y xmake git bsdmainutils
+    && apt install -y xmake git bsdmainutils python3-pip
+
+# Install uf2convert (needed for Sonata) from pip
+RUN python3 -m pip install --pre -U git+https://github.com/makerdiary/uf2utils.git@main
 
 # Create the user
 RUN useradd -m $USERNAME \
