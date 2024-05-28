@@ -69,6 +69,10 @@ RUN useradd -m $USERNAME \
     && apt-get install -y sudo \
     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
+
+# Install the vimrc that configures ALE.
+COPY --chown=$USERNAME:$USERNAME vimrc /home/$USERNAME/.vimrc
+
 # Install the Sail and LLVM licenses
 RUN mkdir -p /cheriot-tools/licenses
 COPY  --from=sail-build /install/LICENCE-cheriot-sail.txt /install/LICENCE-riscv-sail.txt /cheriot-tools/licenses/
@@ -93,5 +97,9 @@ RUN cd /cheriot-tools/bin \
     && chmod +x *
 # Set up the default user.
 USER $USERNAME
+# Install a vim plugin manager
+RUN curl -fLo /home/$USERNAME/.vim/autoload/plug.vim --create-dirs \
+    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+
 ENV SHELL /bin/bash
 CMD bash
