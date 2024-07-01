@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 as sail-build
+FROM ubuntu:24.04 as sail-build
 RUN apt update && apt install -y opam z3 libgmp-dev cvc4 pkg-config zlib1g-dev make
 RUN opam init -y
 RUN test -r /root/.opam/opam-init/init.sh && . /root/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true
@@ -11,12 +11,12 @@ RUN cp c_emulator/cheriot_sim /install
 RUN cp LICENSE /install/LICENCE-cheriot-sail.txt
 RUN cp sail-riscv/LICENCE /install/LICENCE-riscv-sail.txt
 
-FROM ubuntu:22.04 as llvm-download
+FROM ubuntu:24.04 as llvm-download
 RUN apt update && apt install -y curl unzip
 RUN curl -O https://api.cirrus-ci.com/v1/artifact/github/CHERIoT-Platform/llvm-project/Build%20and%20upload%20artefact%20$(uname -p)/binaries.zip
 RUN unzip binaries.zip
 
-FROM ubuntu:22.04 as cheriot-audit
+FROM ubuntu:24.04 as cheriot-audit
 RUN apt update && apt install -y git g++ ninja-build cmake
 RUN git clone https://github.com/CHERIoT-Platform/cheriot-audit
 RUN mkdir cheriot-audit/build
@@ -24,17 +24,8 @@ WORKDIR cheriot-audit/build
 RUN cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release
 RUN ninja
 
-FROM ubuntu:22.04 as ibex-build
-# Ubuntu ships with a version of verilator that is too old.  Build our own version and use that.
-RUN apt update && apt install -y git help2man perl python3 make autoconf g++ flex bison ccache libgoogle-perftools-dev numactl perl-doc libfl2 libfl-dev zlib1g zlib1g-dev ed
-RUN git clone https://github.com/verilator/verilator
-WORKDIR /verilator
-RUN git checkout v5.016
-RUN autoconf
-RUN ./configure --prefix=/usr
-RUN make -j `nproc`
-RUN make install
-# Now use that to build the simulator
+FROM ubuntu:24.04 as ibex-build
+RUN apt update && apt install -y git verilator make g++ ed
 WORKDIR /
 RUN git clone --recurse https://github.com/microsoft/cheriot-safe.git
 WORKDIR cheriot-safe/sim/verilator
@@ -47,21 +38,19 @@ RUN ./vgen
 RUN ./vcomp
 RUN cp obj_dir/Vswci_vtb /cheriot_ibex_safe_sim_trace
 
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 ARG USERNAME=cheriot
 
 RUN apt update \
     && apt upgrade -y \
     && apt install -y software-properties-common ca-certificates curl gnupg \
     && mkdir -p /etc/apt/keyrings \
-    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
-    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" > /etc/apt/sources.list.d/nodesource.list \
     && add-apt-repository ppa:xmake-io/xmake \
     && apt update \
     && apt install -y xmake git bsdmainutils python3-pip
 
 # Install uf2convert (needed for Sonata) from pip
-RUN python3 -m pip install --pre -U git+https://github.com/makerdiary/uf2utils.git@main
+RUN python3 -m pip install --break-system-packages --pre -U git+https://github.com/makerdiary/uf2utils.git@main
 
 # Create the user
 RUN useradd -m $USERNAME \
