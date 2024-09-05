@@ -70,7 +70,7 @@ COPY  --from=ibex-build cheriot_ibex_safe_sim_trace /cheriot-tools/bin/
 COPY  --from=cheriot-audit /cheriot-audit/build/cheriot-audit /cheriot-tools/bin/
 # Install the LLVM tools
 RUN mkdir -p /cheriot-tools/bin
-COPY --from=llvm-download "/Build/install/bin/clang-13" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" /cheriot-tools/bin/
+COPY --from=llvm-download "/Build/install/bin/clang-13" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/llvm-strip" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" /cheriot-tools/bin/
 # Install the Ibex simulator
 # Create the LLVM tool symlinks.
 RUN cd /cheriot-tools/bin \
@@ -79,6 +79,7 @@ RUN cd /cheriot-tools/bin \
     && ln -s lld ld.lld \
     && ln -s llvm-objcopy objcopy \
     && ln -s llvm-objdump objdump \
+    && ln -s llvm-strip strip \
     && chmod +x *
 # Set up the default user.
 USER $USERNAME
