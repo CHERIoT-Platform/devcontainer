@@ -36,9 +36,12 @@ RUN cp obj_dir/Vswci_vtb /cheriot_ibex_safe_sim_trace
 
 FROM ubuntu:24.04 AS mpact-build
 RUN apt update && apt install -y wget git clang default-jre
-RUN wget https://github.com/bazelbuild/bazelisk/releases/download/v1.21.0/bazelisk-linux-amd64
-RUN chmod a+x bazelisk-linux-amd64
-RUN mv bazelisk-linux-amd64 /usr/bin/bazel
+
+RUN machine=$(uname -m) \
+    && if [ "$machine" = "x86_64" ]; then bazel="linux-amd64" ; else bazel="darwin-arm64" ; fi \
+    && wget https://github.com/bazelbuild/bazelisk/releases/download/v1.21.0/bazelisk-$bazel \
+    && chmod a+x bazelisk-$bazel \
+    && mv bazelisk-$bazel /usr/bin/bazel
 RUN git clone https://github.com/google/mpact-cheriot.git
 WORKDIR mpact-cheriot
 RUN bazel build cheriot:mpact_cheriot
