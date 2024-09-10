@@ -58,7 +58,7 @@ RUN apt update \
 RUN python3 -m pip install --break-system-packages --pre git+https://github.com/makerdiary/uf2utils.git@main
 
 # Create the user
-RUN useradd -m $USERNAME -o -u 1000 -g 1000 -U \
+RUN useradd -m $USERNAME -o -u 1000 -g 1000 \
     # Add sudo support.
     && apt-get install -y sudo \
     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
