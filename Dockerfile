@@ -34,6 +34,15 @@ RUN ./vgen
 RUN ./vcomp
 RUN cp obj_dir/Vswci_vtb /cheriot_ibex_safe_sim_trace
 
+FROM ubuntu:24.04 AS mpact-build
+RUN apt update && apt install -y wget git clang default-jre
+RUN wget https://github.com/bazelbuild/bazelisk/releases/download/v1.21.0/bazelisk-linux-amd64
+RUN chmod a+x bazelisk-linux-amd64
+RUN mv bazelisk-linux-amd64 /usr/bin/bazel
+RUN git clone https://github.com/google/mpact-cheriot.git
+WORKDIR mpact-cheriot
+RUN bazel build cheriot:mpact_cheriot
+
 FROM ubuntu:24.04
 ARG USERNAME=cheriot
 
@@ -49,7 +58,7 @@ RUN apt update \
 RUN python3 -m pip install --break-system-packages --pre -U git+https://github.com/makerdiary/uf2utils.git@main
 
 # Create the user
-RUN useradd -m $USERNAME -o -u 1000 -g 1000 \
+RUN useradd -m $USERNAME -o -u 1000 -g 1000 -U \
     # Add sudo support.
     && apt-get install -y sudo \
     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
@@ -68,6 +77,8 @@ COPY  --from=sail-build /install/cheriot_sim /cheriot-tools/bin/
 COPY  --from=ibex-build cheriot_ibex_safe_sim /cheriot-tools/bin/
 COPY  --from=ibex-build cheriot_ibex_safe_sim_trace /cheriot-tools/bin/
 COPY  --from=cheriot-audit /cheriot-audit/build/cheriot-audit /cheriot-tools/bin/
+# Install the mpact simulator
+COPY  --from=mpact-build /mpact-cheriot/bazel-bin/cheriot/mpact_cheriot /cheriot-tools/bin/
 # Install the LLVM tools
 RUN mkdir -p /cheriot-tools/bin
 COPY --from=llvm-download "/Build/install/bin/clang-13" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" /cheriot-tools/bin/
