@@ -38,10 +38,10 @@ FROM ubuntu:24.04 AS mpact-build
 RUN apt update && apt install -y wget git clang default-jre
 
 RUN machine=$(uname -m) \
-    && if [ "$machine" = "x86_64" ]; then bazel="linux-amd64" ; else bazel="darwin-arm64" ; fi \
-    && wget https://github.com/bazelbuild/bazelisk/releases/download/v1.21.0/bazelisk-$bazel \
-    && chmod a+x bazelisk-$bazel \
-    && mv bazelisk-$bazel /usr/bin/bazel
+    && if [ "$machine" = "x86_64" ]; then bazel="amd64" ; else bazel="arm64" ; fi \
+    && wget https://github.com/bazelbuild/bazelisk/releases/download/v1.21.0/bazelisk-linux-$bazel \
+    && chmod a+x bazelisk-linux-$bazel \
+    && mv bazelisk-linux-$bazel /usr/bin/bazel
 RUN git clone https://github.com/google/mpact-cheriot.git
 WORKDIR mpact-cheriot
 RUN bazel build cheriot:mpact_cheriot
