@@ -41,11 +41,11 @@ RUN machine=$(uname -m) \
     && if [ "$machine" = "x86_64" ]; then bazel="amd64" ; else bazel="arm64" ; fi \
     && wget https://github.com/bazelbuild/bazelisk/releases/download/v1.21.0/bazelisk-linux-$bazel \
     && chmod a+x bazelisk-linux-$bazel \
-    && mv bazelisk-linux-$bazel /usr/bin/bazel
-RUN git clone https://github.com/google/mpact-cheriot.git
+    && mv bazelisk-linux-$bazel /usr/bin/bazel \
+    && git clone https://github.com/google/mpact-cheriot.git
 WORKDIR mpact-cheriot
 RUN machine=$(uname -m) \
-    && if [ "$machine" = "x86_64" ]; then cpu=""; else cpu="--cpu=darwin_arm64_cpu"; fi \
+    && if [ "$machine" = "x86_64" ]; then cpu=""; else cpu="--cpu=aarch64"; fi \
     && bazel build $cpu cheriot:mpact_cheriot
 
 FROM ubuntu:24.04
