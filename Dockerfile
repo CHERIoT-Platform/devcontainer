@@ -44,7 +44,8 @@ RUN machine=$(uname -m) \
     && mv bazelisk-linux-$bazel /usr/bin/bazel
 RUN git clone https://github.com/google/mpact-cheriot.git
 WORKDIR mpact-cheriot
-RUN bazel build cheriot:mpact_cheriot
+RUN if [ "$machine" = "x86_64" ]; then cpu=""; else cpu="--cpu=darwin_arm64_cpu"; fi \
+    && bazel build $cpu cheriot:mpact_cheriot
 
 FROM ubuntu:24.04
 ARG USERNAME=cheriot
