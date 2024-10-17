@@ -1,7 +1,7 @@
 x86_docker_builder:
   env:
     GITHUB_TOKEN: ENCRYPTED[98160948dd9e4613e0f7704958694e53fd7f021dd847938991e91c80e14ac5c91822aa9dff3fa34e52ec76f331beeeb5]
-  build_script: docker build -t ghcr.io/cheriot-platform/devcontainer:x86_64-latest -t ghcr.io/cheriot-platform/devcontainer:$DATE_TAG .
+  build_script: docker build -t ghcr.io/cheriot-platform/devcontainer:x86_64-latest .
   smoketest_sail_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:x86_64-latest /bin/sh -c "cd /tmp/ && git clone --recurse http://github.com/Microsoft/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools && xmake && xmake run"
   smoketest_ibex_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:x86_64-latest /bin/sh -c "cd /tmp/ && git clone --recurse http://github.com/Microsoft/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools --board=ibex-safe-simulator && xmake && xmake run"
   login_script: |
@@ -13,7 +13,7 @@ arm_docker_builder:
   env:
     CIRRUS_ARCH: arm64
     GITHUB_TOKEN: ENCRYPTED[98160948dd9e4613e0f7704958694e53fd7f021dd847938991e91c80e14ac5c91822aa9dff3fa34e52ec76f331beeeb5]
-  build_script: docker build -t ghcr.io/cheriot-platform/devcontainer:aarch64-latest -t ghcr.io/cheriot-platform/devcontainer:$DATE_TAG .
+  build_script: docker build -t ghcr.io/cheriot-platform/devcontainer:aarch64-latest .
   smoketest_sail_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:aarch64-latest /bin/sh -c "cd /tmp/ && git clone --recurse http://github.com/Microsoft/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools && xmake && xmake run"
   smoketest_ibex_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:aarch64-latest /bin/sh -c "cd /tmp/ && git clone --recurse http://github.com/Microsoft/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools --board=ibex-safe-simulator && xmake && xmake run"
   login_script: |
@@ -25,7 +25,7 @@ final_docker_builder:
   only_if: $CIRRUS_BRANCH == "main"
   env:
     GITHUB_TOKEN: ENCRYPTED[98160948dd9e4613e0f7704958694e53fd7f021dd847938991e91c80e14ac5c91822aa9dff3fa34e52ec76f331beeeb5]
-  get_date_script: echo "DATE_TAG=$(date +%d%m%Y-%H%M%S)" >> $CIRRUS_ENV
+  get_date_script: echo "DATE_TAG=$(date +%Y-%m-%d.%H.%M)" >> $CIRRUS_ENV
   depends_on:
     - x86
     - arm
@@ -33,5 +33,5 @@ final_docker_builder:
   manifest_script:
     - docker manifest create ghcr.io/cheriot-platform/devcontainer:latest --amend ghcr.io/cheriot-platform/devcontainer:x86_64-latest --amend ghcr.io/cheriot-platform/devcontainer:aarch64-latest
     - docker manifest push --purge ghcr.io/cheriot-platform/devcontainer:latest
-    - docker manifest create ghcr.io/cheriot-platform/devcontainer:$DATE_TAG --amend ghcr.io/cheriot-platform/devcontainer:x86_64-$DATE_TAG --amend ghcr.io/cheriot-platform/devcontainer:aarch64-$DATE_TAG
+    - docker manifest create ghcr.io/cheriot-platform/devcontainer:$DATE_TAG --amend ghcr.io/cheriot-platform/devcontainer:x86_64-$latest --amend ghcr.io/cheriot-platform/devcontainer:aarch64-latest
     - docker manifest push --purge ghcr.io/cheriot-platform/devcontainer:$DATE_TAG
