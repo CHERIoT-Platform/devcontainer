@@ -25,13 +25,13 @@ final_docker_builder:
   only_if: $CIRRUS_BRANCH == "main"
   env:
     GITHUB_TOKEN: ENCRYPTED[98160948dd9e4613e0f7704958694e53fd7f021dd847938991e91c80e14ac5c91822aa9dff3fa34e52ec76f331beeeb5]
-  get_date_script: echo "DATE_TAG=$(date +%Y-%m-%d.%H.%M)" >> $CIRRUS_ENV
   depends_on:
     - x86
     - arm
   login_script: echo $GITHUB_TOKEN | docker login ghcr.io -u davidchisnall --password-stdin
-  manifest_script:
-    - docker manifest create ghcr.io/cheriot-platform/devcontainer:latest --amend ghcr.io/cheriot-platform/devcontainer:x86_64-latest --amend ghcr.io/cheriot-platform/devcontainer:aarch64-latest
-    - docker manifest push --purge ghcr.io/cheriot-platform/devcontainer:latest
-    - docker manifest create ghcr.io/cheriot-platform/devcontainer:$DATE_TAG --amend ghcr.io/cheriot-platform/devcontainer:x86_64-$latest --amend ghcr.io/cheriot-platform/devcontainer:aarch64-latest
-    - docker manifest push --purge ghcr.io/cheriot-platform/devcontainer:$DATE_TAG
+  manifest_script: |
+    DATE_TAG=$(date +%Y-%m-%d.%H.%M)
+    docker manifest create ghcr.io/cheriot-platform/devcontainer:latest --amend ghcr.io/cheriot-platform/devcontainer:x86_64-latest --amend ghcr.io/cheriot-platform/devcontainer:aarch64-latest
+    docker manifest push --purge ghcr.io/cheriot-platform/devcontainer:latest
+    docker manifest create ghcr.io/cheriot-platform/devcontainer:$DATE_TAG --amend ghcr.io/cheriot-platform/devcontainer:x86_64-latest --amend ghcr.io/cheriot-platform/devcontainer:aarch64-latest
+    docker manifest push --purge ghcr.io/cheriot-platform/devcontainer:$DATE_TAG
