@@ -62,9 +62,9 @@ RUN python3 -m pip install --break-system-packages --pre git+https://github.com/
 
 # Create the user
 RUN useradd -m $USERNAME -o -u 1000 -g 1000 \
-    # Add sudo support.
+    # Add sudo support by group, since UID might alias
     && apt-get install -y sudo \
-    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && echo %$(id -n -g 1000) ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 
 # Install the vimrc that configures ALE.
