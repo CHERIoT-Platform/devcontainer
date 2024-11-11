@@ -61,7 +61,9 @@ RUN apt update \
 RUN python3 -m pip install --break-system-packages --pre git+https://github.com/makerdiary/uf2utils.git@main
 
 # Create the user
+# The second user is for the github actions runner
 RUN useradd -m $USERNAME -o -u 1000 -g 1000 \
+    && useradd -m github-ci -o -u 1001 -g 1000 \
     # Add sudo support by group, since UID might alias
     && apt-get install -y sudo \
     && echo %$(id -n -g 1000) ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
