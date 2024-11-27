@@ -2,8 +2,8 @@ x86_docker_builder:
   env:
     GITHUB_TOKEN: ENCRYPTED[98160948dd9e4613e0f7704958694e53fd7f021dd847938991e91c80e14ac5c91822aa9dff3fa34e52ec76f331beeeb5]
   build_script: docker build -t ghcr.io/cheriot-platform/devcontainer:x86_64-latest .
-  smoketest_sail_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:x86_64-latest /bin/sh -c "cd /tmp/ && git clone --recurse http://github.com/Microsoft/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools && xmake && xmake run"
-  smoketest_ibex_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:x86_64-latest /bin/sh -c "cd /tmp/ && git clone --recurse http://github.com/Microsoft/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools --board=ibex-safe-simulator && xmake && xmake run"
+  smoketest_sail_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:x86_64-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools && xmake && xmake run"
+  smoketest_ibex_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:x86_64-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools --board=ibex-safe-simulator && xmake && xmake run"
   login_script: |
     if [  "$CIRRUS_BRANCH" == 'main' ] ; then echo $GITHUB_TOKEN | docker login ghcr.io -u davidchisnall --password-stdin ; fi
   push_script: |
@@ -14,8 +14,8 @@ arm_docker_builder:
     CIRRUS_ARCH: arm64
     GITHUB_TOKEN: ENCRYPTED[98160948dd9e4613e0f7704958694e53fd7f021dd847938991e91c80e14ac5c91822aa9dff3fa34e52ec76f331beeeb5]
   build_script: docker build -t ghcr.io/cheriot-platform/devcontainer:aarch64-latest .
-  smoketest_sail_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:aarch64-latest /bin/sh -c "cd /tmp/ && git clone --recurse http://github.com/Microsoft/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools && xmake && xmake run"
-  smoketest_ibex_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:aarch64-latest /bin/sh -c "cd /tmp/ && git clone --recurse http://github.com/Microsoft/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools --board=ibex-safe-simulator && xmake && xmake run"
+  smoketest_sail_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:aarch64-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools && xmake && xmake run"
+  smoketest_ibex_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:aarch64-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools --board=ibex-safe-simulator && xmake && xmake run"
   login_script: |
     if [  "$CIRRUS_BRANCH" == 'main' ] ; then echo $GITHUB_TOKEN | docker login ghcr.io -u davidchisnall --password-stdin ; fi
   push_script: |
