@@ -79,16 +79,17 @@ COPY --chown=$USERNAME:$USERNAME vimrc /home/$USERNAME/.vimrc
 
 # Install the Sail and LLVM licenses
 RUN mkdir -p /cheriot-tools/licenses
-COPY  --from=sail-build /install/LICENCE-cheriot-sail.txt /install/LICENCE-riscv-sail.txt /cheriot-tools/licenses/
+COPY --from=sail-build /install/LICENCE-cheriot-sail.txt /install/LICENCE-riscv-sail.txt /cheriot-tools/licenses/
 COPY --from=llvm-download /Build/install/LLVM-LICENSE.TXT /cheriot-tools/licenses/
 # Install the sail simulator.
-COPY  --from=sail-build /install/cheriot_sim /cheriot-tools/bin/
+COPY --from=sail-build /install/cheriot_sim /cheriot-tools/bin/
 # Install the Ibex simulator.
-COPY  --from=ibex-build cheriot_ibex_safe_sim /cheriot-tools/bin/
-COPY  --from=ibex-build cheriot_ibex_safe_sim_trace /cheriot-tools/bin/
-COPY  --from=cheriot-audit /cheriot-audit/build/cheriot-audit /cheriot-tools/bin/
+COPY --from=ibex-build cheriot_ibex_safe_sim /cheriot-tools/bin/
+COPY --from=ibex-build cheriot_ibex_safe_sim_trace /cheriot-tools/bin/
+# Install audit tool.
+COPY --from=cheriot-audit /cheriot-audit/build/cheriot-audit /cheriot-tools/bin/
 # Install the mpact simulator
-COPY  --from=mpact-build /mpact-cheriot/bazel-bin/cheriot/mpact_cheriot /cheriot-tools/bin/
+COPY --from=mpact-build /mpact-cheriot/bazel-bin/cheriot/mpact_cheriot /cheriot-tools/bin/
 # Install the LLVM tools
 RUN mkdir -p /cheriot-tools/bin
 COPY --from=llvm-download "/Build/install/bin/clang-13" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/llvm-strip" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" /cheriot-tools/bin/
