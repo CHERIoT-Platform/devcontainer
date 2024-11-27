@@ -1,5 +1,6 @@
+# Build Sail model
 FROM ghcr.io/cheriot-platform/sail:latest as sail-build
-RUN git clone --recurse https://github.com/microsoft/cheriot-sail.git
+RUN git clone --recurse https://github.com/CHERIoT-Platform/cheriot-sail
 WORKDIR cheriot-sail
 RUN eval $(opam env) && make csim -j4
 RUN mkdir /install
@@ -7,11 +8,13 @@ RUN cp c_emulator/cheriot_sim /install
 RUN cp LICENSE /install/LICENCE-cheriot-sail.txt
 RUN cp sail-riscv/LICENCE /install/LICENCE-riscv-sail.txt
 
+# Download LLVM toolchain
 FROM ubuntu:24.04 as llvm-download
 RUN apt update && apt install -y curl unzip
 RUN curl -O https://api.cirrus-ci.com/v1/artifact/github/CHERIoT-Platform/llvm-project/Build%20and%20upload%20artefact%20$(uname -p)/binaries.zip
 RUN unzip binaries.zip
 
+# Build Audit tool
 FROM ubuntu:24.04 as cheriot-audit
 RUN apt update && apt install -y git g++ ninja-build cmake
 RUN git clone https://github.com/CHERIoT-Platform/cheriot-audit
@@ -20,6 +23,7 @@ WORKDIR cheriot-audit/build
 RUN cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release
 RUN ninja
 
+# Build Safe simulator
 FROM ubuntu:24.04 as ibex-build
 RUN apt update && apt install -y git verilator make g++ ed
 WORKDIR /
@@ -34,9 +38,9 @@ RUN ./vgen
 RUN ./vcomp
 RUN cp obj_dir/Vswci_vtb /cheriot_ibex_safe_sim_trace
 
+# Build mpact
 FROM ubuntu:24.04 AS mpact-build
 RUN apt update && apt install -y wget git clang default-jre
-
 RUN machine=$(uname -m) \
     && if [ "$machine" = "x86_64" ]; then bazel="amd64" ; else bazel="arm64" ; fi \
     && wget https://github.com/bazelbuild/bazelisk/releases/download/v1.21.0/bazelisk-linux-$bazel \
