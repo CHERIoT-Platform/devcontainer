@@ -128,6 +128,7 @@ COPY --from=sail-build /install/LICENCE-cheriot-sail.txt /install/LICENCE-riscv-
 COPY --from=llvm-download /Build/install/LLVM-LICENSE.TXT /cheriot-tools/licenses/
 COPY --from=sonata-build /sonata-system/LICENSE /cheriot-tools/licenses/SONATA-LICENSE.txt
 # Install the sail simulator.
+RUN mkdir -p /cheriot-tools/bin
 COPY --from=sail-build /install/cheriot_sim /cheriot-tools/bin/
 # Install the Ibex simulator.
 COPY --from=ibex-build cheriot_ibex_safe_sim /cheriot-tools/bin/
@@ -141,9 +142,7 @@ COPY --from=sonata-build sonata_simulator /cheriot-tools/bin/
 RUN mkdir -p /cheriot-tools/elf
 COPY --from=sonata-build sonata_simulator_boot_stub /cheriot-tools/elf/
 # Install the LLVM tools
-RUN mkdir -p /cheriot-tools/bin
 COPY --from=llvm-download "/Build/install/bin/clang-13" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/llvm-strip" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" /cheriot-tools/bin/
-# Install the Ibex simulator
 # Create the LLVM tool symlinks.
 RUN cd /cheriot-tools/bin \
     && ln -s clang-13 clang \
