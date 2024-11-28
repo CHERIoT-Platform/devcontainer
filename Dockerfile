@@ -50,6 +50,51 @@ RUN machine=$(uname -m) \
 WORKDIR mpact-cheriot
 RUN bazel build cheriot:mpact_cheriot
 
+FROM ubuntu:24.04 AS verilator-build
+# Verilator dependencies
+RUN apt update && apt install -y git help2man perl python3 make g++ libfl2 libfl-dev zlib1g zlib1g-dev autoconf flex bison
+WORKDIR /
+# Build Verilator
+RUN git clone https://github.com/verilator/verilator
+WORKDIR verilator
+RUN git checkout v5.024
+RUN mkdir install
+RUN autoconf \
+    && ./configure --prefix=/verilator/install \
+    && make -j `nproc` \
+    && make install
+
+FROM ubuntu:24.04 as sonata-build
+# Sonata dependencies
+RUN apt update && apt install -y git python3 python3-venv build-essential libelf-dev libxml2-dev
+# Install LLVM for sim boot stub.
+RUN mkdir -p /cheriot-tools/bin
+COPY --from=llvm-download "/Build/install/bin/clang-13" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" /cheriot-tools/bin/
+# Create the LLVM tool symlinks.
+RUN cd /cheriot-tools/bin \
+    && ln -s clang-13 clang \
+    && ln -s clang clang++ \
+    && ln -s lld ld.lld \
+    && ln -s llvm-objcopy objcopy \
+    && ln -s llvm-objdump objdump \
+    && chmod +x *
+COPY --from=verilator-build "/verilator/install" /verilator
+WORKDIR /
+# Build Sonata simulator
+RUN git clone https://github.com/lowRISC/sonata-system
+WORKDIR sonata-system
+RUN python3 -m venv .venv \
+    && . .venv/bin/activate \
+    && pip install -r python-requirements.txt \
+    && export PATH=/verilator/bin:$PATH \
+    && fusesoc --cores-root=. run --target=sim --tool=verilator --setup --build lowrisc:sonata:system
+RUN cp build/lowrisc_sonata_system_0/sim-verilator/Vtop_verilator /sonata_simulator
+# Build Sonata simulator boot stub
+WORKDIR sw/cheri/sim_boot_stub
+RUN export PATH=/cheriot-tools/bin:$PATH \
+    && make
+RUN cp sim_boot_stub /sonata_simulator_boot_stub
+
 FROM ubuntu:24.04
 ARG USERNAME=cheriot
 
@@ -77,10 +122,11 @@ RUN useradd -m $USERNAME -o -u 1000 -g 1000 \
 # Install the vimrc that configures ALE.
 COPY --chown=$USERNAME:$USERNAME vimrc /home/$USERNAME/.vimrc
 
-# Install the Sail and LLVM licenses
+# Install the Sail, LLVM and Sonata licenses
 RUN mkdir -p /cheriot-tools/licenses
 COPY --from=sail-build /install/LICENCE-cheriot-sail.txt /install/LICENCE-riscv-sail.txt /cheriot-tools/licenses/
 COPY --from=llvm-download /Build/install/LLVM-LICENSE.TXT /cheriot-tools/licenses/
+COPY --from=sonata-build /sonata-system/LICENSE /cheriot-tools/licenses/SONATA-LICENSE.txt
 # Install the sail simulator.
 COPY --from=sail-build /install/cheriot_sim /cheriot-tools/bin/
 # Install the Ibex simulator.
@@ -90,6 +136,10 @@ COPY --from=ibex-build cheriot_ibex_safe_sim_trace /cheriot-tools/bin/
 COPY --from=cheriot-audit /cheriot-audit/build/cheriot-audit /cheriot-tools/bin/
 # Install the mpact simulator
 COPY --from=mpact-build /mpact-cheriot/bazel-bin/cheriot/mpact_cheriot /cheriot-tools/bin/
+# Install the Sonata simulator and boot stub.
+COPY --from=sonata-build sonata_simulator /cheriot-tools/bin/
+RUN mkdir -p /cheriot-tools/elf
+COPY --from=sonata-build sonata_simulator_boot_stub /cheriot-tools/elf/
 # Install the LLVM tools
 RUN mkdir -p /cheriot-tools/bin
 COPY --from=llvm-download "/Build/install/bin/clang-13" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/llvm-strip" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" /cheriot-tools/bin/
