@@ -13,5 +13,18 @@ mkdir /home/cheriot-rtos.mapped
 sudo bindfs --map=martha/boris /home/cheriot-rtos /home/cheriot-rtos.mapped
 ```
 
-VScode can now be launched with a dev container from /home/cheriot-rtos.mapped 
+VScode can now be launched with a dev container from /home/cheriot-rtos.mapped
+
+## Building locally
+
+You can test locally using either Docker or Podman.
+The command-line interfaces for the two are the same, so just replace `podman` with `docker` in the examples if you are using Docker.
+Clone this repo and then run the following commands from within it:
+
+```sh
+podman build --tag 'cheriot-devcontainer-sonata-sim' .
+podman run -it --rm localhost/cheriot-devcontainer-sonata-sim:latest
+```
+
+This should open up an interactive shell for you where you can make sure that cheriot-tools is setup properly.
 
