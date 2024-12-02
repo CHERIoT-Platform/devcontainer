@@ -93,7 +93,7 @@ RUN cp build/lowrisc_sonata_system_0/sim-verilator/Vtop_verilator /sonata_simula
 WORKDIR sw/cheri/sim_boot_stub
 RUN export PATH=/cheriot-tools/bin:$PATH \
     && make
-RUN cp sim_boot_stub /sonata_simulator_boot_stub
+RUN cp sim_sram_boot_stub /sonata_simulator_boot_stub
 
 FROM ubuntu:24.04
 ARG USERNAME=cheriot
