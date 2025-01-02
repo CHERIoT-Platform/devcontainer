@@ -5,7 +5,7 @@
 
 # Build Sail model.
 FROM ghcr.io/cheriot-platform/sail:latest as sail-build
-RUN git clone --recurse https://github.com/CHERIoT-Platform/cheriot-sail
+RUN git clone --depth 1 --shallow-submodules --recurse https://github.com/CHERIoT-Platform/cheriot-sail
 WORKDIR cheriot-sail
 RUN eval $(opam env) && make csim -j4
 RUN mkdir /install
@@ -22,7 +22,7 @@ RUN unzip binaries.zip
 # Build Audit tool.
 FROM ubuntu:24.04 as cheriot-audit
 RUN apt update && apt install -y git g++ ninja-build cmake
-RUN git clone https://github.com/CHERIoT-Platform/cheriot-audit
+RUN git clone --depth 1 https://github.com/CHERIoT-Platform/cheriot-audit
 RUN mkdir cheriot-audit/build
 WORKDIR cheriot-audit/build
 RUN cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release
@@ -32,7 +32,7 @@ RUN ninja
 FROM ubuntu:24.04 as ibex-build
 RUN apt update && apt install -y git verilator make g++ ed
 WORKDIR /
-RUN git clone --recurse https://github.com/microsoft/cheriot-safe.git
+RUN git clone --depth 1 --shallow-submodules --recurse https://github.com/microsoft/cheriot-safe.git
 WORKDIR cheriot-safe/sim/verilator
 RUN ./vgen_stdin
 RUN ./vcomp
@@ -51,7 +51,7 @@ RUN machine=$(uname -m) \
     && wget https://github.com/bazelbuild/bazelisk/releases/download/v1.21.0/bazelisk-linux-$bazel \
     && chmod a+x bazelisk-linux-$bazel \
     && mv bazelisk-linux-$bazel /usr/bin/bazel \
-    && git clone https://github.com/google/mpact-cheriot.git
+    && git clone --depth 1 https://github.com/google/mpact-cheriot.git
 WORKDIR mpact-cheriot
 RUN bazel build cheriot:mpact_cheriot
 
@@ -61,9 +61,8 @@ FROM ubuntu:24.04 AS verilator-build
 RUN apt update && apt install -y git help2man perl python3 make g++ libfl2 libfl-dev zlib1g zlib1g-dev autoconf flex bison
 WORKDIR /
 # Clone Verilator repo and perform build.
-RUN git clone https://github.com/verilator/verilator
+RUN git clone --depth 1 -b v5.024 https://github.com/verilator/verilator
 WORKDIR verilator
-RUN git checkout v5.024
 RUN mkdir install
 RUN autoconf \
     && ./configure --prefix=/verilator/install \
@@ -88,7 +87,7 @@ RUN cd /cheriot-tools/bin \
 COPY --from=verilator-build "/verilator/install" /verilator
 WORKDIR /
 # Build Sonata simulator.
-RUN git clone https://github.com/lowRISC/sonata-system
+RUN git clone --depth 1 https://github.com/lowRISC/sonata-system
 WORKDIR sonata-system
 RUN python3 -m venv .venv \
     && . .venv/bin/activate \
