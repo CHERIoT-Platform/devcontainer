@@ -76,10 +76,10 @@ FROM ubuntu:24.04 as sonata-build
 RUN apt update && apt install -y git python3 python3-venv build-essential libelf-dev libxml2-dev
 # Install LLVM for sim boot stub.
 RUN mkdir -p /cheriot-tools/bin
-COPY --from=llvm-download "/Build/install/bin/clang-13" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" /cheriot-tools/bin/
+COPY --from=llvm-download "/Build/install/bin/clang-17" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" /cheriot-tools/bin/
 # Create the LLVM tool symlinks.
 RUN cd /cheriot-tools/bin \
-    && ln -s clang-13 clang \
+    && ln -s clang-17 clang \
     && ln -s clang clang++ \
     && ln -s lld ld.lld \
     && ln -s llvm-objcopy objcopy \
@@ -153,10 +153,10 @@ COPY --from=sonata-build sonata_simulator /cheriot-tools/bin/
 RUN mkdir -p /cheriot-tools/elf
 COPY --from=sonata-build sonata_simulator_boot_stub /cheriot-tools/elf/
 # Install the LLVM tools.
-COPY --from=llvm-download "/Build/install/bin/clang-13" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/llvm-strip" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" /cheriot-tools/bin/
+COPY --from=llvm-download "/Build/install/bin/clang-17" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/llvm-strip" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" /cheriot-tools/bin/
 # Create the LLVM tool symlinks.
 RUN cd /cheriot-tools/bin \
-    && ln -s clang-13 clang \
+    && ln -s clang-17 clang \
     && ln -s clang clang++ \
     && ln -s lld ld.lld \
     && ln -s llvm-objcopy objcopy \
