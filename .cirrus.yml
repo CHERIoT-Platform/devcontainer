@@ -4,6 +4,7 @@ x86_docker_builder:
   build_script: docker build -t ghcr.io/cheriot-platform/devcontainer:x86_64-latest .
   smoketest_sail_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:x86_64-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools && xmake && xmake run"
   smoketest_ibex_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:x86_64-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools --board=ibex-safe-simulator && xmake && xmake run"
+  smoketest_sonata_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:x86_64-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/examples/01.hello_world && xmake f --sdk=/cheriot-tools --board=sonata-simulator -m release --testing-model-output=y && xmake && xmake run"
   login_script: |
     if [  "$CIRRUS_BRANCH" == 'main' ] ; then echo $GITHUB_TOKEN | docker login ghcr.io -u davidchisnall --password-stdin ; fi
   push_script: |
@@ -16,6 +17,7 @@ arm_docker_builder:
   build_script: docker build -t ghcr.io/cheriot-platform/devcontainer:aarch64-latest .
   smoketest_sail_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:aarch64-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools && xmake && xmake run"
   smoketest_ibex_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:aarch64-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools --board=ibex-safe-simulator && xmake && xmake run"
+  smoketest_sonata_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:aarch64-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/examples/01.hello_world && xmake f --sdk=/cheriot-tools --board=sonata-simulator -m release --testing-model-output=y && xmake && xmake run"
   login_script: |
     if [  "$CIRRUS_BRANCH" == 'main' ] ; then echo $GITHUB_TOKEN | docker login ghcr.io -u davidchisnall --password-stdin ; fi
   push_script: |
