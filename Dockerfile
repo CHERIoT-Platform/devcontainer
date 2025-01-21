@@ -99,7 +99,7 @@ RUN cp build/lowrisc_sonata_system_0/sim-verilator/Vtop_verilator /sonata_simula
 WORKDIR sw/cheri/sim_boot_stub
 RUN export PATH=/cheriot-tools/bin:$PATH \
     && make
-RUN cp sim_sram_boot_stub /sonata_simulator_boot_stub
+RUN cp sim_sram_boot_stub /sonata_simulator_sram_boot_stub && cp sim_boot_stub /sonata_simulator_hyperram_boot_stub
 
 ##########################################
 # Set up the main development container. #
@@ -150,7 +150,7 @@ COPY --from=mpact-build /mpact-cheriot/bazel-bin/cheriot/mpact_cheriot /cheriot-
 # Install the Sonata simulator and boot stub.
 COPY --from=sonata-build sonata_simulator /cheriot-tools/bin/
 RUN mkdir -p /cheriot-tools/elf
-COPY --from=sonata-build sonata_simulator_boot_stub /cheriot-tools/elf/
+COPY --from=sonata-build sonata_simulator_sram_boot_stub sonata_simulator_hyperram_boot_stub /cheriot-tools/elf/
 # Install the LLVM tools.
 COPY --from=llvm-download "/Build/install/bin/clang-17" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/llvm-strip" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" /cheriot-tools/bin/
 # Create the LLVM tool symlinks.
@@ -161,7 +161,9 @@ RUN cd /cheriot-tools/bin \
     && ln -s llvm-objcopy objcopy \
     && ln -s llvm-objdump objdump \
     && ln -s llvm-strip strip \
-    && chmod +x *
+    && chmod +x * \
+    && cd ../elf \
+    && ln -s sonata_simulator_sram_boot_stub sonata_simulator_boot_stub
 # Set up the default user.
 USER $USERNAME
 # Install a vim plugin manager.
