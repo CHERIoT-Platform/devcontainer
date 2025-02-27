@@ -4,7 +4,7 @@
 ################################################
 
 # Build Sail model.
-FROM ghcr.io/cheriot-platform/sail:latest as sail-build
+FROM ghcr.io/cheriot-platform/sail:latest AS sail-build
 RUN git clone --depth 1 --shallow-submodules --recurse https://github.com/CHERIoT-Platform/cheriot-sail
 WORKDIR cheriot-sail
 RUN eval $(opam env) && make csim -j4
@@ -14,13 +14,13 @@ RUN cp LICENSE /install/LICENCE-cheriot-sail.txt
 RUN cp sail-riscv/LICENCE /install/LICENCE-riscv-sail.txt
 
 # Download LLVM toolchain.
-FROM ubuntu:24.04 as llvm-download
+FROM ubuntu:24.04 AS llvm-download
 RUN apt update && apt install -y curl unzip
 RUN curl -O https://api.cirrus-ci.com/v1/artifact/github/CHERIoT-Platform/llvm-project/Build%20and%20upload%20artefact%20$(uname -p)/binaries.zip
 RUN unzip binaries.zip
 
 # Build Audit tool.
-FROM ubuntu:24.04 as cheriot-audit
+FROM ubuntu:24.04 AS cheriot-audit
 RUN apt update && apt install -y git g++ ninja-build cmake
 RUN git clone --depth 1 https://github.com/CHERIoT-Platform/cheriot-audit
 RUN mkdir cheriot-audit/build
@@ -29,7 +29,7 @@ RUN cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release
 RUN ninja
 
 # Build Safe simulator.
-FROM ubuntu:24.04 as ibex-build
+FROM ubuntu:24.04 AS ibex-build
 RUN apt update && apt install -y git verilator make g++ ed
 WORKDIR /
 RUN git clone --depth 1 --shallow-submodules --recurse https://github.com/microsoft/cheriot-safe.git
@@ -70,15 +70,15 @@ RUN autoconf \
     && make install
 
 # Build Sonata simulator and boot stub.
-FROM ubuntu:24.04 as sonata-build
+FROM ubuntu:24.04 AS sonata-build
 # Sonata dependencies.
 RUN apt update && apt install -y git python3 python3-venv build-essential libelf-dev libxml2-dev
 # Install LLVM for sim boot stub.
 RUN mkdir -p /cheriot-tools/bin
-COPY --from=llvm-download "/Build/install/bin/clang-17" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" /cheriot-tools/bin/
+COPY --from=llvm-download "/Build/install/bin/clang-[0-9][0-9]" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" /cheriot-tools/bin/
 # Create the LLVM tool symlinks.
 RUN cd /cheriot-tools/bin \
-    && ln -s clang-17 clang \
+    && ln -s clang-[0-9][0-9] clang \
     && ln -s clang clang++ \
     && ln -s lld ld.lld \
     && ln -s llvm-objcopy objcopy \
@@ -152,10 +152,10 @@ COPY --from=sonata-build sonata_simulator /cheriot-tools/bin/
 RUN mkdir -p /cheriot-tools/elf
 COPY --from=sonata-build sonata_simulator_sram_boot_stub sonata_simulator_hyperram_boot_stub /cheriot-tools/elf/
 # Install the LLVM tools.
-COPY --from=llvm-download "/Build/install/bin/clang-17" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/llvm-strip" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" /cheriot-tools/bin/
+COPY --from=llvm-download "/Build/install/bin/clang-[0-9][0-9]" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/llvm-strip" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" /cheriot-tools/bin/
 # Create the LLVM tool symlinks.
 RUN cd /cheriot-tools/bin \
-    && ln -s clang-17 clang \
+    && ln -s clang-[0-9][0-9] clang \
     && ln -s clang clang++ \
     && ln -s lld ld.lld \
     && ln -s llvm-objcopy objcopy \
