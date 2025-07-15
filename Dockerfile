@@ -116,6 +116,10 @@ RUN apt update \
     && apt update \
     && apt install -y xmake git bsdmainutils python3-pip
 
+# Work around xmake 3.0.0 being buggy.
+COPY xmake.diff patch.sh /tmp
+RUN sh /tmp/patch.sh
+
 # Install uf2convert (needed for Sonata) from pip.
 RUN python3 -m pip install --break-system-packages --pre git+https://github.com/makerdiary/uf2utils.git@main
 
