@@ -37,11 +37,6 @@ WORKDIR cheriot-safe/sim/verilator
 RUN ./vgen_stdin
 RUN ./vcomp
 RUN cp obj_dir/Vswci_vtb /cheriot_ibex_safe_sim
-# Patch all.f to build with tracing.
-RUN echo "10a\n+define+RVFI=1\n.\nw\n" | ed all.f
-RUN ./vgen
-RUN ./vcomp
-RUN cp obj_dir/Vswci_vtb /cheriot_ibex_safe_sim_trace
 
 # Build mpact.
 FROM ubuntu:24.04 AS mpact-build
@@ -146,7 +141,7 @@ RUN mkdir -p /cheriot-tools/bin
 COPY --from=sail-build /install/cheriot_sim /cheriot-tools/bin/
 # Install the Ibex simulator.
 COPY --from=ibex-build cheriot_ibex_safe_sim /cheriot-tools/bin/
-COPY --from=ibex-build cheriot_ibex_safe_sim_trace /cheriot-tools/bin/
+#COPY --from=ibex-build cheriot_ibex_safe_sim_trace /cheriot-tools/bin/
 # Install audit tool.
 COPY --from=cheriot-audit /cheriot-audit/build/cheriot-audit /cheriot-tools/bin/
 # Install the mpact simulator.
@@ -165,6 +160,7 @@ RUN cd /cheriot-tools/bin \
     && ln -s llvm-objcopy objcopy \
     && ln -s llvm-objdump objdump \
     && ln -s llvm-strip strip \
+    && ln -s cheriot_ibex_safe_sim cheriot_ibex_safe_sim_trace \
     && chmod +x * \
     && cd ../elf \
     && ln -s sonata_simulator_sram_boot_stub sonata_simulator_boot_stub
