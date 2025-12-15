@@ -1,7 +1,7 @@
 x86_docker_builder:
   env:
     GITHUB_TOKEN: ENCRYPTED[8ea6a9cb6a2cbda2be48345233d98c5c8a8ea9d88720591ba8f69837955ba172607a90b5a405fd03e10375b1dfe7c46c]
-  build_script: docker build -t ghcr.io/cheriot-platform/devcontainer:x86_64-latest .
+  build_script: docker build --provenance false -t ghcr.io/cheriot-platform/devcontainer:x86_64-latest .
   smoketest_sail_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:x86_64-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools && xmake && xmake run"
   smoketest_ibex_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:x86_64-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools --board=ibex-safe-simulator && xmake && xmake run"
   smoketest_sonata_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:x86_64-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/examples/01.hello_world && xmake f --sdk=/cheriot-tools --board=sonata-simulator -m release --testing-model-output=y && xmake && xmake run"
@@ -14,7 +14,7 @@ arm_docker_builder:
   env:
     CIRRUS_ARCH: arm64
     GITHUB_TOKEN: ENCRYPTED[8ea6a9cb6a2cbda2be48345233d98c5c8a8ea9d88720591ba8f69837955ba172607a90b5a405fd03e10375b1dfe7c46c]
-  build_script: docker build -t ghcr.io/cheriot-platform/devcontainer:aarch64-latest .
+  build_script: docker build --provenance false -t ghcr.io/cheriot-platform/devcontainer:aarch64-latest .
   smoketest_sail_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:aarch64-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools && xmake && xmake run"
   smoketest_ibex_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:aarch64-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools --board=ibex-safe-simulator && xmake && xmake run"
   smoketest_sonata_script: docker run --rm ghcr.io/cheriot-platform/devcontainer:aarch64-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/examples/01.hello_world && xmake f --sdk=/cheriot-tools --board=sonata-simulator -m release --testing-model-output=y && xmake && xmake run"
