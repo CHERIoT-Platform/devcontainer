@@ -29,14 +29,15 @@ RUN cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release
 RUN ninja
 
 # Build Safe simulator.
-FROM ubuntu:24.04 AS ibex-build
+FROM ubuntu:24.04 AS cheriot-safe-build
 RUN apt update && apt install -y git verilator make g++ ed
 WORKDIR /
 RUN git clone --depth 1 --shallow-submodules --recurse https://github.com/microsoft/cheriot-safe.git
 WORKDIR cheriot-safe/sim/verilator
-RUN ./vgen_stdin
-RUN ./vcomp
-RUN cp obj_dir/Vswci_vtb /cheriot_ibex_safe_sim
+RUN ./vgen -stdin && ./vcomp && mv obj_dir/Vswci_vtb /cheriot_ibex_safe_sim && rm -rf obj_dir
+RUN ./vgen -stdin -trace && ./vcomp && mv obj_dir/Vswci_vtb /cheriot_ibex_safe_sim_trace && rm -rf obj_dir
+RUN ./vgen -stdin -conf2 && ./vcomp && mv obj_dir/Vswci_vtb /cheriot_kudu_safe_sim && rm -rf obj_dir
+RUN ./vgen -stdin -trace -conf2 && ./vcomp && mv obj_dir/Vswci_vtb /cheriot_kudu_safe_sim_trace && rm -rf obj_dir
 
 # Build mpact.
 FROM ubuntu:24.04 AS mpact-build
@@ -140,8 +141,10 @@ COPY --from=sonata-build /sonata-system/LICENSE /cheriot-tools/licenses/SONATA-L
 RUN mkdir -p /cheriot-tools/bin
 COPY --from=sail-build /install/cheriot_sim /cheriot-tools/bin/
 # Install the Ibex simulator.
-COPY --from=ibex-build cheriot_ibex_safe_sim /cheriot-tools/bin/
-#COPY --from=ibex-build cheriot_ibex_safe_sim_trace /cheriot-tools/bin/
+COPY --from=cheriot-safe-build cheriot_ibex_safe_sim /cheriot-tools/bin/
+COPY --from=cheriot-safe-build cheriot_ibex_safe_sim_trace /cheriot-tools/bin/
+COPY --from=cheriot-safe-build cheriot_kudu_safe_sim /cheriot-tools/bin/
+COPY --from=cheriot-safe-build cheriot_kudu_safe_sim_trace /cheriot-tools/bin/
 # Install audit tool.
 COPY --from=cheriot-audit /cheriot-audit/build/cheriot-audit /cheriot-tools/bin/
 # Install the mpact simulator.
@@ -160,7 +163,6 @@ RUN cd /cheriot-tools/bin \
     && ln -s llvm-objcopy objcopy \
     && ln -s llvm-objdump objdump \
     && ln -s llvm-strip strip \
-    && ln -s cheriot_ibex_safe_sim cheriot_ibex_safe_sim_trace \
     && chmod +x * \
     && cd ../elf \
     && ln -s sonata_simulator_sram_boot_stub sonata_simulator_boot_stub
