@@ -71,7 +71,7 @@ FROM ubuntu:24.04 AS sonata-build
 RUN apt update && apt install -y git python3 python3-venv build-essential libelf-dev libxml2-dev
 # Install LLVM for sim boot stub.
 RUN mkdir -p /cheriot-tools/bin
-COPY --from=llvm-download "/Build/install/bin/clang-[0-9][0-9]" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" "/Build/install/bin/lldb" "/Build/install/lib/liblldb.so" /cheriot-tools/bin/
+COPY --from=llvm-download "/Build/install/bin/clang-[0-9][0-9]" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" /cheriot-tools/bin/
 # Create the LLVM tool symlinks.
 RUN cd /cheriot-tools/bin \
     && ln -s clang-[0-9][0-9] clang \
@@ -110,7 +110,7 @@ RUN apt update \
     && mkdir -p /etc/apt/keyrings \
     && add-apt-repository ppa:xmake-io/xmake \
     && apt update \
-    && apt install -y xmake git bsdmainutils python3-pip
+    && apt install -y xmake git bsdmainutils python3-pip libncurses6
 
 # Work around xmake 3.0.0 being buggy.
 COPY xmake.diff patch.sh /tmp
@@ -154,7 +154,7 @@ COPY --from=sonata-build sonata_simulator /cheriot-tools/bin/
 RUN mkdir -p /cheriot-tools/elf
 COPY --from=sonata-build sonata_simulator_sram_boot_stub sonata_simulator_hyperram_boot_stub /cheriot-tools/elf/
 # Install the LLVM tools.
-COPY --from=llvm-download "/Build/install/bin/clang-[0-9][0-9]" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/llvm-strip" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" "/Build/install/bin/lldb" "/Build/install/lib/liblldb.so" /cheriot-tools/bin/
+COPY --from=llvm-download "/Build/install/bin/clang-[0-9][0-9]" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/llvm-strip" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" "/Build/install/bin/lldb" /cheriot-tools/bin/
 # Create the LLVM tool symlinks.
 RUN cd /cheriot-tools/bin \
     && ln -s clang-[0-9][0-9] clang \
@@ -166,6 +166,13 @@ RUN cd /cheriot-tools/bin \
     && chmod +x * \
     && cd ../elf \
     && ln -s sonata_simulator_sram_boot_stub sonata_simulator_boot_stub
+RUN mkdir -p /cheriot-tools/lib
+COPY --from=llvm-download ""/Build/install/lib/liblldb.so.[0-9][0-9].[0-9]"" /cheriot-tools/lib/
+RUN cd /cheriot-tools/lib \
+    && set -- liblldb.so.[0-9]*.[0-9]* \
+    && ln -s "$1" "${1%.*}" \
+    && ln -s "${1%.*}" liblldb.so \
+    && chmod +x *
 # Set up the default user.
 USER $USERNAME
 # Install a vim plugin manager.
