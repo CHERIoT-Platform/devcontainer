@@ -167,12 +167,14 @@ RUN cd /cheriot-tools/bin \
     && cd ../elf \
     && ln -s sonata_simulator_sram_boot_stub sonata_simulator_boot_stub
 RUN mkdir -p /cheriot-tools/lib
-COPY --from=llvm-download ""/Build/install/lib/liblldb.so.[0-9][0-9].[0-9]"" /cheriot-tools/lib/
-RUN cd /cheriot-tools/lib \
-    && set -- liblldb.so.[0-9]*.[0-9]* \
-    && ln -s "$1" "${1%.*}" \
-    && ln -s "${1%.*}" liblldb.so \
-    && chmod +x *
+COPY --from=llvm-download ""/Build/install/lib/liblldb.so.*"" /cheriot-tools/lib/
+RUN cd /cheriot-tools/lib && \
+    ls -al && \
+    set -- liblldb.so.* && \
+    [ -e "$1" ] && \
+    ln -sf "$1" "${1%.*}" && \
+    ln -sf "${1%.*}" liblldb.so && \
+    chmod +x liblldb.so*
 # Set up the default user.
 USER $USERNAME
 # Install a vim plugin manager.
