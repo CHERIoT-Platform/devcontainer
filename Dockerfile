@@ -97,6 +97,15 @@ RUN export PATH=/cheriot-tools/bin:$PATH \
     && make
 RUN cp sim_sram_boot_stub /sonata_simulator_sram_boot_stub && cp sim_boot_stub /sonata_simulator_hyperram_boot_stub
 
+FROM ubuntu:24.04 AS rust-download
+RUN apt update && apt install -y curl unzip tar
+RUN curl -O https://api.cirrus-ci.com/v1/artifact/github/CHERIoT-Platform/cheri-rust/Build%20and%20upload%20artefact%20$(uname -p)/binaries.zip
+RUN unzip binaries.zip
+RUN cd build/dist && for file in *.tar.gz; do tar -zxf "$file"; done && rm -r *.tar.gz
+RUN cd build/dist && ls -la
+RUN for dir in build/dist/*; do  "$dir/install.sh" --prefix=/cheriot-tools; done
+
+
 ##########################################
 # Set up the main development container. #
 ##########################################
@@ -180,6 +189,9 @@ USER $USERNAME
 # Install a vim plugin manager.
 RUN curl -fLo /home/$USERNAME/.vim/autoload/plug.vim --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+
+# Install the Rust tools.
+COPY --from=rust-download "/cheriot-tools" "/cheriot-tools"
 
 # Enter shell.
 ENV SHELL /bin/bash
