@@ -71,7 +71,7 @@ FROM ubuntu:24.04 AS sonata-build
 RUN apt update && apt install -y git python3 python3-venv build-essential libelf-dev libxml2-dev
 # Install LLVM for sim boot stub.
 RUN mkdir -p /cheriot-tools/bin
-COPY --from=llvm-download "/Build/install/bin/clang-[0-9][0-9]" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" /cheriot-tools/bin/
+COPY --from=llvm-download "/Build/install/bin/clang-[0-9][0-9]" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" "/Build/install/bin/llvm-readelf" /cheriot-tools/bin/
 # Create the LLVM tool symlinks.
 RUN cd /cheriot-tools/bin \
     && ln -s clang-[0-9][0-9] clang \
@@ -79,6 +79,7 @@ RUN cd /cheriot-tools/bin \
     && ln -s lld ld.lld \
     && ln -s llvm-objcopy objcopy \
     && ln -s llvm-objdump objdump \
+    && ln -s llvm-readelf readelf \
     && chmod +x *
 COPY --from=verilator-build "/verilator/install" /verilator
 WORKDIR /
