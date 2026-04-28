@@ -6,7 +6,7 @@
 # Build Sail model.
 FROM ghcr.io/cheriot-platform/sail:latest AS sail-build
 RUN git clone --depth 1 --shallow-submodules --recurse https://github.com/CHERIoT-Platform/cheriot-sail
-WORKDIR cheriot-sail
+WORKDIR /cheriot-sail
 RUN eval $(opam env) && make csim -j4
 RUN mkdir /install
 RUN cp c_emulator/cheriot_sim /install
@@ -24,7 +24,7 @@ FROM ubuntu:24.04 AS cheriot-audit
 RUN apt update && apt install -y git g++ ninja-build cmake
 RUN git clone --depth 1 https://github.com/CHERIoT-Platform/cheriot-audit
 RUN mkdir cheriot-audit/build
-WORKDIR cheriot-audit/build
+WORKDIR /cheriot-audit/build
 RUN cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release
 RUN ninja
 
@@ -48,7 +48,7 @@ RUN machine=$(uname -m) \
     && chmod a+x bazelisk-linux-$bazel \
     && mv bazelisk-linux-$bazel /usr/bin/bazel \
     && git clone --depth 1 https://github.com/google/mpact-cheriot.git
-WORKDIR mpact-cheriot
+WORKDIR /mpact-cheriot
 RUN bazel build cheriot:mpact_cheriot
 
 # Build Verilator v5.024.
@@ -173,5 +173,5 @@ RUN curl -fLo /home/$USERNAME/.vim/autoload/plug.vim --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
 # Enter shell.
-ENV SHELL /bin/bash
-CMD bash
+ENV SHELL=/bin/bash
+CMD ["bash"]
