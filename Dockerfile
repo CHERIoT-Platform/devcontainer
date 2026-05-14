@@ -21,7 +21,7 @@ RUN unzip binaries.zip
 
 # Build Audit tool.
 FROM ubuntu:24.04 AS cheriot-audit
-RUN apt update && apt install -y git g++ ninja-build cmake
+RUN apt update && apt install -y git g++ ninja-build cmake libssl-dev
 RUN git clone --depth 1 https://github.com/CHERIoT-Platform/cheriot-audit
 RUN mkdir cheriot-audit/build
 WORKDIR /cheriot-audit/build
@@ -119,7 +119,7 @@ RUN apt update \
     && mkdir -p /etc/apt/keyrings \
     && add-apt-repository ppa:xmake-io/xmake \
     && apt update \
-    && apt install -y xmake git bsdmainutils python3-pip libncurses6
+    && apt install -y xmake git bsdmainutils python3-pip libncurses6 openssl
 
 # Work around xmake 3.0.0 being buggy.
 COPY xmake.diff patch.sh /tmp
