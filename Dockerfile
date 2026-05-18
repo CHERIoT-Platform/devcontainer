@@ -15,9 +15,28 @@ RUN cp sail-riscv/LICENCE /install/LICENCE-riscv-sail.txt
 
 # Download LLVM toolchain.
 FROM ubuntu:24.04 AS llvm-download
-RUN apt update && apt install -y curl unzip
-RUN curl -O https://api.cirrus-ci.com/v1/artifact/github/CHERIoT-Platform/llvm-project/Build%20and%20upload%20artefact%20$(uname -p)/binaries.zip
-RUN unzip binaries.zip
+RUN apt update && apt install -y curl unzip jq
+RUN ARCH=$( \
+      case "$(uname -m)" in \
+        x86_64)  echo x86 ;; \
+        aarch64) echo aarch64 ;; \
+        *)       echo unsupported ;; \
+      esac \
+    ) && \
+    URL=$( \
+      curl -L \
+        -H "Accept: application/vnd.github+json" \
+        -H "X-GitHub-Api-Version: 2026-03-10" \
+        https://api.github.com/repos/CHERIoT-Platform/llvm-project/actions/artifacts | \
+      jq -r '.artifacts | map(select(.name == "llvm-'"$ARCH"'")) | max_by(.created_at).archive_download_url' \
+    ) && \
+    curl -L \
+      -H "Accept: application/vnd.github+json" \
+      -H "X-GitHub-Api-Version: 2026-03-10" \
+      -H "Authorization: Bearer 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" \
+      -o llvm.zip \
+      "$URL"
+RUN unzip llvm.zip
 
 # Build Audit tool.
 FROM ubuntu:24.04 AS cheriot-audit
@@ -71,7 +90,7 @@ FROM ubuntu:24.04 AS sonata-build
 RUN apt update && apt install -y git python3 python3-venv build-essential libelf-dev libxml2-dev
 # Install LLVM for sim boot stub.
 RUN mkdir -p /cheriot-tools/bin
-COPY --from=llvm-download "/Build/install/bin/clang-[0-9][0-9]" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" /cheriot-tools/bin/
+COPY --from=llvm-download "/bin/clang-[0-9][0-9]" "/bin/lld" "/bin/llvm-objcopy" "/bin/llvm-objdump" "/bin/clangd" "/bin/clang-format" "/bin/clang-tidy" /cheriot-tools/bin/
 # Create the LLVM tool symlinks.
 RUN cd /cheriot-tools/bin \
     && ln -s clang-[0-9][0-9] clang \
@@ -144,7 +163,7 @@ COPY --chown=$USERNAME:$USERNAME vimrc /home/$USERNAME/.vimrc
 # Install the Sail, LLVM and Sonata licenses.
 RUN mkdir -p /cheriot-tools/licenses
 COPY --from=sail-build /install/LICENCE-cheriot-sail.txt /install/LICENCE-riscv-sail.txt /cheriot-tools/licenses/
-COPY --from=llvm-download /Build/install/LLVM-LICENSE.TXT /cheriot-tools/licenses/
+COPY --from=llvm-download /LLVM-LICENSE.TXT /cheriot-tools/licenses/
 COPY --from=sonata-build /sonata-system/LICENSE /cheriot-tools/licenses/SONATA-LICENSE.txt
 # Install the sail simulator.
 RUN mkdir -p /cheriot-tools/bin
@@ -163,7 +182,7 @@ COPY --from=sonata-build sonata_simulator /cheriot-tools/bin/
 RUN mkdir -p /cheriot-tools/elf
 COPY --from=sonata-build sonata_simulator_sram_boot_stub sonata_simulator_hyperram_boot_stub /cheriot-tools/elf/
 # Install the LLVM tools.
-COPY --from=llvm-download "/Build/install/bin/clang-[0-9][0-9]" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/llvm-strip" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" "/Build/install/bin/lldb" /cheriot-tools/bin/
+COPY --from=llvm-download "//bin/clang-[0-9][0-9]" "/bin/lld" "/bin/llvm-objcopy" "/bin/llvm-objdump" "/bin/llvm-strip" "/bin/clangd" "/bin/clang-format" "/bin/clang-tidy" "/bin/lldb" /cheriot-tools/bin/
 # Create the LLVM tool symlinks.
 RUN cd /cheriot-tools/bin \
     && ln -s clang-[0-9][0-9] clang \
@@ -176,7 +195,7 @@ RUN cd /cheriot-tools/bin \
     && cd ../elf \
     && ln -s sonata_simulator_sram_boot_stub sonata_simulator_boot_stub
 RUN mkdir -p /cheriot-tools/lib
-COPY --from=llvm-download ""/Build/install/lib/liblldb.so.*"" /cheriot-tools/lib/
+COPY --from=llvm-download ""/lib/liblldb.so.*"" /cheriot-tools/lib/
 RUN cd /cheriot-tools/lib && \
     ls -al && \
     set -- liblldb.so.* && \
