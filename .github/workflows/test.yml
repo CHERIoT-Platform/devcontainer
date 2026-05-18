@@ -1,0 +1,15 @@
+name: CHERIoT Network-Stack HIL-CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: [ the-capable-hub-farm, board:Sonata ]
+    steps:
+    - name: test
+      run: echo Hello World!
