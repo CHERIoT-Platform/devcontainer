@@ -1,0 +1,93 @@
+name: Build and push devcontainer
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build devcontainer (${{ matrix.docker_arch }})
+    runs-on: "cirun-gcp-${{ matrix.arch }}--${{ github.run_id }}"
+    timeout-minutes: 120
+
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86
+            docker_arch: x86_64
+          - arch: aarch64
+            docker_arch: aarch64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Build image
+        run: |
+          docker build \
+            --provenance=false \
+            -t ghcr.io/cheriot-platform/devcontainer:${{ matrix.docker_arch }}-latest \
+            .
+
+      - name: Smoke test - Sail simulator
+        run: docker run --rm ghcr.io/cheriot-platform/devcontainer:${{ matrix.docker_arch }}-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools && xmake && xmake run"
+
+      - name: Smoke test - Ibex SAFE simulator
+        run: docker run --rm ghcr.io/cheriot-platform/devcontainer:${{ matrix.docker_arch }}-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools --board=ibex-safe-simulator && xmake && xmake run"
+
+      - name: Smoke test - Sonata simulator
+        run: docker run --rm ghcr.io/cheriot-platform/devcontainer:${{ matrix.docker_arch }}-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/examples/01.hello_world && xmake f --sdk=/cheriot-tools --board=sonata-simulator -m release --testing-model-output=y && xmake && xmake run"
+
+      - name: Login to container registry
+        if: github.ref == 'refs/heads/main'
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push arch-specific image
+        if: github.ref == 'refs/heads/main'
+        run: docker push ghcr.io/cheriot-platform/devcontainer:${{ matrix.docker_arch }}-latest
+
+  manifest:
+    name: Create and push multi-arch manifest
+    runs-on: ubuntu-24.04
+    needs: build
+    if: github.ref == 'refs/heads/main'
+
+    permissions:
+      packages: write
+
+    steps:
+      - name: Login to container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create and push manifests
+        run: |
+          DATE_TAG=$(date +%Y-%m-%d.%H.%M)
+
+          docker manifest create ghcr.io/cheriot-platform/devcontainer:latest \
+            --amend ghcr.io/cheriot-platform/devcontainer:x86_64-latest \
+            --amend ghcr.io/cheriot-platform/devcontainer:aarch64-latest
+          docker manifest push --purge ghcr.io/cheriot-platform/devcontainer:latest
+
+          docker manifest create ghcr.io/cheriot-platform/devcontainer:${DATE_TAG} \
+            --amend ghcr.io/cheriot-platform/devcontainer:x86_64-latest \
+            --amend ghcr.io/cheriot-platform/devcontainer:aarch64-latest
+          docker manifest push --purge ghcr.io/cheriot-platform/devcontainer:${DATE_TAG}
