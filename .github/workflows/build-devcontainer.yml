@@ -35,6 +35,7 @@ jobs:
 
       - name: Build image
         run: |
+          apt update && apt install -y docker &&
           docker build \
             --provenance=false \
             -t ghcr.io/cheriot-platform/devcontainer:${{ matrix.docker_arch }}-latest \
