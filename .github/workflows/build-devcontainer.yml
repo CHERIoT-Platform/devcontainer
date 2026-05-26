@@ -42,10 +42,10 @@ jobs:
             .
 
       - name: Smoke test - Sail simulator
-        run: docker run --rm ghcr.io/cheriot-platform/devcontainer:${{ matrix.docker_arch }}-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools && xmake && xmake run"
+        run: docker run --rm ghcr.io/cheriot-platform/devcontainer:${{ matrix.docker_arch }}-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools --test-rust=y && xmake && xmake run"
 
       - name: Smoke test - Ibex SAFE simulator
-        run: docker run --rm ghcr.io/cheriot-platform/devcontainer:${{ matrix.docker_arch }}-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools --board=ibex-safe-simulator && xmake && xmake run"
+        run: docker run --rm ghcr.io/cheriot-platform/devcontainer:${{ matrix.docker_arch }}-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/tests && xmake f --sdk=/cheriot-tools --board=ibex-safe-simulator --test-rust=y && xmake && xmake run"
 
       - name: Smoke test - Sonata simulator
         run: docker run --rm ghcr.io/cheriot-platform/devcontainer:${{ matrix.docker_arch }}-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/examples/01.hello_world && xmake f --sdk=/cheriot-tools --board=sonata-simulator -m release --testing-model-output=y && xmake && xmake run"
