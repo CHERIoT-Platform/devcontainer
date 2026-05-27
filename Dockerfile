@@ -121,13 +121,17 @@ RUN export PATH=/cheriot-tools/bin:$PATH \
     && make
 RUN cp sim_sram_boot_stub /sonata_simulator_sram_boot_stub && cp sim_boot_stub /sonata_simulator_hyperram_boot_stub
 
-FROM ubuntu:24.04 AS rust-download
-RUN apt update && apt install -y curl unzip tar
-RUN curl -O https://api.cirrus-ci.com/v1/artifact/github/CHERIoT-Platform/cheri-rust/Build%20and%20upload%20artefact%20$(uname -p)/binaries.zip
-RUN unzip binaries.zip
-RUN cd build/dist && for file in *.tar.gz; do tar -zxf "$file"; done && rm -r *.tar.gz
-RUN cd build/dist && ls -la
-RUN for dir in build/dist/*; do  "$dir/install.sh" --prefix=/cheriot-tools; done
+FROM ubuntu:24.04 AS rust-build
+RUN apt update && apt install -y pkg-config curl clang ninja-build lld cmake perl libssl-dev git
+RUN git clone --depth 1 https://github.com/cheriot-platform/cheri-rust
+# TODO: use config from source (needs https://github.com/CHERIoT-Platform/cheri-rust/pull/160)
+COPY rust-config.toml /cheri-rust/bootstrap.toml
+WORKDIR /cheri-rust
+RUN ./x build llvm
+RUN ./x build rustc --target=riscv32cheriot-unknown-cheriotrtos --stage=2
+RUN ./x build std --target=riscv32cheriot-unknown-cheriotrtos --stage=2
+RUN ./x build cargo --target=riscv32cheriot-unknown-cheriotrtos --stage=2
+RUN ./x install rustc std cargo --target=riscv32cheriot-unknown-cheriotrtos
 
 
 ##########################################
@@ -215,7 +219,7 @@ RUN curl -fLo /home/$USERNAME/.vim/autoload/plug.vim --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
 # Install the Rust tools.
-COPY --from=rust-download "/cheriot-tools" "/cheriot-tools"
+COPY --from=rust-build "/cheriot-tools" "/cheriot-tools"
 
 # Enter shell.
 ENV SHELL=/bin/bash
