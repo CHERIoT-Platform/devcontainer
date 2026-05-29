@@ -7,7 +7,7 @@ runners:
     preemptible: true
     extra_config:
       baseDisk:
-        diskSizeGb: 60
+        diskSizeGb: 80
     labels:
       - cirun-gcp-aarch64
 
@@ -19,6 +19,6 @@ runners:
     preemptible: true
     extra_config:
       baseDisk:
-        diskSizeGb: 60
+        diskSizeGb: 80
     labels:
       - cirun-gcp-x86
