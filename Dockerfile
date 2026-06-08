@@ -13,6 +13,18 @@ RUN cp c_emulator/cheriot_sim /install
 RUN cp LICENSE /install/LICENCE-cheriot-sail.txt
 RUN cp sail-riscv/LICENCE /install/LICENCE-riscv-sail.txt
 
+# Build OpenOCD
+FROM ubuntu:24.04 AS openocd-build
+RUN apt update
+RUN apt install -y git make g++ libtool pkg-config libusb-dev
+RUN git clone --depth 1 --shallow-submodules --recurse https://github.com/CHERIoT-Platform/openocd.git
+WORKDIR openocd
+RUN ./bootstrap
+RUN ./configure --enable-internal-jimtcl --prefix=/install
+RUN make
+RUN make install
+RUN cp -R LICENSES /install/OPENOCD-LICENSES
+
 # Download LLVM toolchain.
 FROM ubuntu:24.04 AS llvm-download
 RUN apt update
@@ -174,6 +186,7 @@ RUN mkdir -p /cheriot-tools/licenses
 COPY --from=sail-build /install/LICENCE-cheriot-sail.txt /install/LICENCE-riscv-sail.txt /cheriot-tools/licenses/
 COPY --from=llvm-download /Build/install/LLVM-LICENSE.TXT /cheriot-tools/licenses/
 COPY --from=sonata-build /sonata-system/LICENSE /cheriot-tools/licenses/SONATA-LICENSE.txt
+COPY --from=openocd-build /install/OPENOCD-LICENSES /cheriot-tools/licenses/OPENOCD-LICENSES
 # Install the sail simulator.
 RUN mkdir -p /cheriot-tools/bin
 COPY --from=sail-build /install/cheriot_sim /cheriot-tools/bin/
@@ -190,6 +203,10 @@ COPY --from=mpact-build /mpact-cheriot/bazel-bin/cheriot/mpact_cheriot /cheriot-
 COPY --from=sonata-build sonata_simulator /cheriot-tools/bin/
 RUN mkdir -p /cheriot-tools/elf
 COPY --from=sonata-build sonata_simulator_sram_boot_stub sonata_simulator_hyperram_boot_stub /cheriot-tools/elf/
+# Install OpenOCD
+COPY --from=openocd-build /install/bin/openocd /cheriot-tools/bin/openocd
+RUN mkdir -p /cheriot-tools/share
+COPY --from=openocd-build /install/share/openocd /cheriot-tools/share/openocd
 # Install the LLVM tools.
 COPY --from=llvm-download "/Build/install/bin/clang-[0-9][0-9]" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/llvm-strip" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" "/Build/install/bin/lldb" /cheriot-tools/bin/
 # Create the LLVM tool symlinks.
