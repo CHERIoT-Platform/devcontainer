@@ -16,7 +16,7 @@ RUN cp sail-riscv/LICENCE /install/LICENCE-riscv-sail.txt
 # Build OpenOCD
 FROM ubuntu:24.04 AS openocd-build
 RUN apt update
-RUN apt install -y git make g++ libtool pkg-config libusb-dev
+RUN apt install -y git make g++ libtool pkg-config libusb-1.0-0-dev
 RUN git clone --depth 1 --shallow-submodules --recurse https://github.com/CHERIoT-Platform/openocd.git
 WORKDIR openocd
 RUN ./bootstrap
