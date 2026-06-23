@@ -204,6 +204,8 @@ COPY --from=sonata-build sonata_simulator /cheriot-tools/bin/
 RUN mkdir -p /cheriot-tools/elf
 COPY --from=sonata-build sonata_simulator_sram_boot_stub sonata_simulator_hyperram_boot_stub /cheriot-tools/elf/
 # Install OpenOCD
+# Ideally, we would build it and install it from source in a future version
+RUN apt update && apt install libusb-1.0-0
 COPY --from=openocd-build /install/bin/openocd /cheriot-tools/bin/openocd
 RUN mkdir -p /cheriot-tools/share
 COPY --from=openocd-build /install/share/openocd /cheriot-tools/share/openocd
