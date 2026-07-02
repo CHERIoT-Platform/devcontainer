@@ -13,7 +13,7 @@ concurrency:
 jobs:
   build:
     name: Build devcontainer (${{ matrix.docker_arch }})
-    runs-on: "cirun-gcp-${{ matrix.arch }}--${{ github.run_id }}"
+    runs-on: warp-custom-gcp-aarch64-32cpu
     timeout-minutes: 120
 
     permissions:
