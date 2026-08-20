@@ -196,6 +196,18 @@ RUN jq -n \
         '{component: $component, origin: $origin, commit: $commit}' \
     > SBOM-cheri-rust.json
 
+FROM ubuntu:24.04 AS sbom-build
+RUN apt update && apt install -y jq
+RUN mkdir -p /cheriot-tools/sbom
+COPY --from=sail-build "/cheriot-sail/SBOM-cheriot-sail.json" "/cheriot-tools/sbom/"
+COPY --from=openocd-build "openocd/SBOM-openocd.json" "/cheriot-tools/sbom/"
+COPY --from=llvm-build "/Build/SBOM-llvm-project.json" "/cheriot-tools/sbom/"
+COPY --from=cheriot-audit "/cheriot-audit/build/SBOM-cheriot-audit.json" "/cheriot-tools/sbom/"
+COPY --from=cheriot-safe-build "cheriot-safe/sim/verilator/SBOM-cheriot-safe.json" "/cheriot-tools/sbom/"
+COPY --from=mpact-build "/mpact-cheriot/SBOM-mpact-cheriot.json" "/cheriot-tools/sbom/"
+COPY --from=sonata-build "/sonata-system/SBOM-sonata-system.json" "/cheriot-tools/sbom/"
+COPY --from=rust-build "/cheri-rust/SBOM-cheri-rust.json" "/cheriot-tools/sbom/"
+RUN jq -s '.' /cheriot-tools/sbom/SBOM-*.json > /cheriot-tools/sbom.json
 
 ##########################################
 # Set up the main development container. #
@@ -285,19 +297,8 @@ RUN cd /cheriot-tools/lib && \
     chmod +x liblldb.so*
 # Install the Rust tools.
 COPY --from=rust-build "/cheriot-tools" "/cheriot-tools"
-
-# Build SBOM
-RUN mkdir -p /cheriot-tools/sbom
-COPY --from=sail-build "/cheriot-sail/SBOM-cheriot-sail.json" "/cheriot-tools/sbom/"
-COPY --from=openocd-build "openocd/SBOM-openocd.json" "/cheriot-tools/sbom/"
-COPY --from=llvm-build "/Build/SBOM-llvm-project.json" "/cheriot-tools/sbom/"
-COPY --from=cheriot-audit "/cheriot-audit/build/SBOM-cheriot-audit.json" "/cheriot-tools/sbom/"
-COPY --from=cheriot-safe-build "cheriot-safe/sim/verilator/SBOM-cheriot-safe.json" "/cheriot-tools/sbom/"
-COPY --from=mpact-build "/mpact-cheriot/SBOM-mpact-cheriot.json" "/cheriot-tools/sbom/"
-COPY --from=sonata-build "/sonata-system/SBOM-sonata-system.json" "/cheriot-tools/sbom/"
-COPY --from=rust-build "/cheri-rust/SBOM-cheri-rust.json" "/cheriot-tools/sbom/"
-RUN jq -s '.' /cheriot-tools/sbom/SBOM-*.json > /cheriot-tools/sbom/sbom.json
-RUN rm -Rf /cheriot-tools/sbom/SBOM-*.json
+# Install the SBOM
+COPY --from=sbom-build "/cheriot-tools/sbom.json" "/cheriot-tools/sbom.json"
 
 # Set up the default user.
 USER $USERNAME
