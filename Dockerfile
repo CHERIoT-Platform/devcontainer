@@ -5,8 +5,10 @@
 
 # Build Sail model.
 FROM ghcr.io/cheriot-platform/sail:latest AS sail-build
-RUN apt update
-RUN apt install -y jq
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        jq
 RUN git clone --depth 1 --shallow-submodules --recurse https://github.com/CHERIoT-Platform/cheriot-sail
 WORKDIR /cheriot-sail
 RUN eval $(opam env) && make csim -j4
@@ -23,8 +25,18 @@ RUN jq -n \
 
 # Build OpenOCD
 FROM ubuntu:24.04 AS openocd-build
-RUN apt update
-RUN apt install -y git make g++ libtool pkg-config libusb-1.0-0-dev jq
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        autoconf \
+        automake \
+        ca-certificates \
+        g++ \
+        git \
+        jq \
+        libtool \
+        libusb-1.0-0-dev \
+        make \
+        pkg-config
 RUN git clone --depth 1 --shallow-submodules --recurse https://github.com/CHERIoT-Platform/openocd.git
 WORKDIR openocd
 RUN ./bootstrap
@@ -41,8 +53,16 @@ RUN jq -n \
 
 # Build LLVM toolchain.
 FROM ubuntu:24.04 AS llvm-build
-RUN apt update
-RUN apt install -y git clang ninja-build lld cmake jq
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        clang \
+        cmake \
+        git \
+        jq \
+        lld \
+        ninja-build \
+        python3
 RUN git clone --depth 1 --shallow-submodules --recurse https://github.com/CHERIoT-Platform/llvm-project
 ENV NINJA_STATUS="%p [%f:%s/%t] %o/s, %es: "
 RUN mkdir /Build
@@ -78,7 +98,15 @@ RUN jq -n \
 
 # Build Audit tool.
 FROM ubuntu:24.04 AS cheriot-audit
-RUN apt update && apt install -y git g++ ninja-build cmake libssl-dev jq
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        cmake \
+        g++ \
+        git \
+        jq \
+        libssl-dev \
+        ninja-build
 RUN git clone --depth 1 https://github.com/CHERIoT-Platform/cheriot-audit
 RUN mkdir cheriot-audit/build
 WORKDIR /cheriot-audit/build
@@ -93,7 +121,15 @@ RUN jq -n \
 
 # Build Safe simulator.
 FROM ubuntu:24.04 AS cheriot-safe-build
-RUN apt update && apt install -y git verilator make g++ ed jq
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        ed \
+        g++ \
+        git \
+        jq \
+        make \
+        verilator
 WORKDIR /
 RUN git clone --depth 1 --shallow-submodules --recurse https://github.com/microsoft/cheriot-safe.git
 WORKDIR cheriot-safe/sim/verilator
@@ -110,7 +146,14 @@ RUN jq -n \
 
 # Build mpact.
 FROM ubuntu:24.04 AS mpact-build
-RUN apt update && apt install -y wget git clang default-jre jq
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        clang \
+        default-jre \
+        git \
+        jq \
+        wget
 RUN machine=$(uname -m) \
     && if [ "$machine" = "x86_64" ]; then bazel="amd64" ; else bazel="arm64" ; fi \
     && wget https://github.com/bazelbuild/bazelisk/releases/download/v1.21.0/bazelisk-linux-$bazel \
@@ -129,7 +172,22 @@ RUN jq -n \
 # Build Verilator v5.024.
 FROM ubuntu:24.04 AS verilator-build
 # Install dependencies.
-RUN apt update && apt install -y git help2man perl python3 make g++ libfl2 libfl-dev zlib1g zlib1g-dev autoconf flex bison
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        autoconf \
+        bison \
+        ca-certificates \
+        flex \
+        g++ \
+        git \
+        help2man \
+        libfl-dev \
+        libfl2 \
+        make \
+        perl \
+        python3 \
+        zlib1g \
+        zlib1g-dev
 WORKDIR /
 # Clone Verilator repo and perform build.
 RUN git clone --depth 1 -b v5.024 https://github.com/verilator/verilator
@@ -143,18 +201,16 @@ RUN autoconf \
 # Build Sonata simulator and boot stub.
 FROM ubuntu:24.04 AS sonata-build
 # Sonata dependencies.
-RUN apt update && apt install -y git python3 python3-venv build-essential libelf-dev libxml2-dev jq
-# Install LLVM for sim boot stub.
-RUN mkdir -p /cheriot-tools/bin
-COPY --from=llvm-build "/Build/install/bin/clang-[0-9][0-9]" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" /cheriot-tools/bin/
-# Create the LLVM tool symlinks.
-RUN cd /cheriot-tools/bin \
-    && ln -s clang-[0-9][0-9] clang \
-    && ln -s clang clang++ \
-    && ln -s lld ld.lld \
-    && ln -s llvm-objcopy objcopy \
-    && ln -s llvm-objdump objdump \
-    && chmod +x *
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        ca-certificates \
+        git \
+        jq \
+        libelf-dev \
+        libxml2-dev \
+        python3 \
+        python3-venv
 COPY --from=verilator-build "/verilator/install" /verilator
 WORKDIR /
 # Build Sonata simulator.
@@ -174,12 +230,36 @@ RUN jq -n \
     > SBOM-sonata-system.json
 # Build Sonata simulator boot stub.
 WORKDIR sw/cheri/sim_boot_stub
+# Install LLVM for sim boot stub.
+RUN mkdir -p /cheriot-tools/bin
+COPY --from=llvm-build "/Build/install/bin/clang-[0-9][0-9]" "/Build/install/bin/lld" "/Build/install/bin/llvm-objcopy" "/Build/install/bin/llvm-objdump" "/Build/install/bin/clangd" "/Build/install/bin/clang-format" "/Build/install/bin/clang-tidy" /cheriot-tools/bin/
+# Create the LLVM tool symlinks.
+RUN cd /cheriot-tools/bin \
+    && ln -s clang-[0-9][0-9] clang \
+    && ln -s clang clang++ \
+    && ln -s lld ld.lld \
+    && ln -s llvm-objcopy objcopy \
+    && ln -s llvm-objdump objdump \
+    && chmod +x *
 RUN export PATH=/cheriot-tools/bin:$PATH \
     && make
 RUN cp sim_sram_boot_stub /sonata_simulator_sram_boot_stub && cp sim_boot_stub /sonata_simulator_hyperram_boot_stub
 
 FROM ubuntu:24.04 AS rust-build
-RUN apt update && apt install -y pkg-config curl clang ninja-build lld cmake perl libssl-dev git jq
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        clang \
+        cmake \
+        git \
+        jq \
+        libssl-dev \
+        lld \
+        ninja-build \
+        perl \
+        pkg-config \
+        python3
 RUN git clone --depth 1 https://github.com/cheriot-platform/cheri-rust
 # TODO: use config from source (needs https://github.com/CHERIoT-Platform/cheri-rust/pull/160)
 COPY rust-config.toml /cheri-rust/bootstrap.toml
@@ -197,7 +277,10 @@ RUN jq -n \
     > SBOM-cheri-rust.json
 
 FROM ubuntu:24.04 AS sbom-build
-RUN apt update && apt install -y jq
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        jq
 RUN mkdir -p /cheriot-tools/sbom
 COPY --from=sail-build "/cheriot-sail/SBOM-cheriot-sail.json" "/cheriot-tools/sbom/"
 COPY --from=openocd-build "openocd/SBOM-openocd.json" "/cheriot-tools/sbom/"
@@ -216,13 +299,24 @@ RUN jq -s '.' /cheriot-tools/sbom/SBOM-*.json > /cheriot-tools/sbom.json
 FROM ubuntu:24.04
 ARG USERNAME=cheriot
 
-RUN apt update \
-    && apt upgrade -y \
-    && apt install -y software-properties-common ca-certificates curl gnupg jq \
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        gnupg \
+        jq \
+        software-properties-common \
     && mkdir -p /etc/apt/keyrings \
     && add-apt-repository ppa:xmake-io/xmake \
-    && apt update \
-    && apt install -y xmake git bsdmainutils python3-pip libncurses6 openssl
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        bsdmainutils \
+        git \
+        libncurses6 \
+        openssl \
+        python3-pip \
+        xmake
 
 # Work around xmake 3.0.0 being buggy.
 COPY xmake.diff patch.sh /tmp
@@ -237,7 +331,7 @@ RUN useradd -m $USERNAME -o -u 1000 -g 1000 \
     && useradd -m github-ci -o -u 1001 -g 1000 \
     && groupadd -o -g 1000 $USERNAME \
     # Add sudo support by group, since UID might alias.
-    && apt-get install -y sudo \
+    && apt-get install -y --no-install-recommends sudo \
     && echo %$(id -n -g 1000) ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 
@@ -246,7 +340,6 @@ COPY --chown=$USERNAME:$USERNAME vimrc /home/$USERNAME/.vimrc
 
 # Install the Sail, LLVM and Sonata licenses.
 RUN mkdir -p /cheriot-tools/licenses /cheriot-tools/sbom
-COPY --from=sail-build /install/LICENCE-cheriot-sail.txt /install/LICENCE-riscv-sail.txt /cheriot-tools/licenses/
 COPY --from=sail-build /install/LICENCE-cheriot-sail.txt /install/LICENCE-riscv-sail.txt /cheriot-tools/licenses/
 COPY --from=llvm-build /Build/install/LLVM-LICENSE.TXT /cheriot-tools/licenses/
 COPY --from=sonata-build /sonata-system/LICENSE /cheriot-tools/licenses/SONATA-LICENSE.txt
@@ -269,7 +362,7 @@ RUN mkdir -p /cheriot-tools/elf
 COPY --from=sonata-build sonata_simulator_sram_boot_stub sonata_simulator_hyperram_boot_stub /cheriot-tools/elf/
 # Install OpenOCD
 # Ideally, we would build it and install it from source in a future version
-RUN apt update && apt install libusb-1.0-0
+RUN apt-get install -y --no-install-recommends libusb-1.0-0
 COPY --from=openocd-build /install/bin/openocd /cheriot-tools/bin/openocd
 RUN mkdir -p /cheriot-tools/share
 COPY --from=openocd-build /install/share/openocd /cheriot-tools/share/openocd
