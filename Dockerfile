@@ -68,7 +68,7 @@ RUN ninja install-distribution
 RUN cp ../llvm-project/llvm/LICENSE.TXT install/LLVM-LICENSE.TXT
 RUN rm install/bin/clang install/bin/clang++ install/bin/clang-cl install/bin/clang-cpp install/bin/ld.lld install/bin/ld64* install/bin/lld-link install/bin/wasm-ld
 RUN find install/lib -maxdepth 1 -type l -delete
-WORKDIR llvm-project
+WORKDIR ../llvm-project
 RUN jq -n \
         --arg component "llvm-project" \
         --arg origin "$(git remote get-url origin)" \
