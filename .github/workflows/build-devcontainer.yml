@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+  pull_request:
 
 concurrency:
   group: ${{ github.ref }}
@@ -50,7 +51,7 @@ jobs:
         run: docker run --rm ghcr.io/cheriot-platform/devcontainer:${{ matrix.docker_arch }}-latest /bin/sh -c "cd /tmp/ && git clone --recurse https://github.com/cheriot-platform/cheriot-rtos && cd cheriot-rtos/examples/01.hello_world && xmake f --sdk=/cheriot-tools --board=sonata-simulator -m release --testing-model-output=y && xmake && xmake run"
 
       - name: Login to container registry
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'  && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
           registry: ghcr.io
@@ -58,14 +59,14 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push arch-specific image
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         run: docker push ghcr.io/cheriot-platform/devcontainer:${{ matrix.docker_arch }}-latest
 
   manifest:
     name: Create and push multi-arch manifest
     runs-on: ubuntu-24.04
     needs: build
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
 
     permissions:
       packages: write
