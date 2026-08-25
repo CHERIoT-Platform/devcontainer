@@ -126,6 +126,42 @@ RUN jq -n \
         '{component: $component, origin: $origin, commit: $commit}' \
     > SBOM-cheriot-audit.json
 
+# Build Verilator v5.024.
+FROM ubuntu:24.04 AS verilator-build
+# Install dependencies.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        autoconf \
+        bison \
+        ca-certificates \
+        flex \
+        g++ \
+        git \
+        help2man \
+        jq \
+        libfl-dev \
+        libfl2 \
+        make \
+        perl \
+        python3 \
+        zlib1g \
+        zlib1g-dev
+WORKDIR /
+# Clone Verilator repo and perform build.
+RUN git clone --depth 1 -b v5.024 https://github.com/verilator/verilator
+WORKDIR verilator
+RUN mkdir install
+RUN autoconf \
+    && ./configure --prefix=/verilator/install \
+    && make -j `nproc` \
+    && make install
+RUN jq -n \
+        --arg component "verilator" \
+        --arg origin "$(git remote get-url origin)" \
+        --arg commit "$(git rev-parse HEAD)" \
+        '{component: $component, origin: $origin, commit: $commit}' \
+    > SBOM-verilator.json
+
 # Build Safe simulator.
 FROM ubuntu:24.04 AS cheriot-safe-build
 RUN apt-get update && \
@@ -135,8 +171,9 @@ RUN apt-get update && \
         g++ \
         git \
         jq \
-        make \
-        verilator
+        make
+COPY --from=verilator-build "/verilator/install" /verilator
+ENV PATH="/verilator/bin:${PATH}"
 WORKDIR /
 RUN git clone --depth 1 --shallow-submodules --recurse https://github.com/microsoft/cheriot-safe.git
 WORKDIR cheriot-safe/sim/verilator
@@ -175,35 +212,6 @@ RUN jq -n \
         --arg commit "$(git rev-parse HEAD)" \
         '{component: $component, origin: $origin, commit: $commit}' \
     > SBOM-mpact-cheriot.json
-
-# Build Verilator v5.024.
-FROM ubuntu:24.04 AS verilator-build
-# Install dependencies.
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        autoconf \
-        bison \
-        ca-certificates \
-        flex \
-        g++ \
-        git \
-        help2man \
-        libfl-dev \
-        libfl2 \
-        make \
-        perl \
-        python3 \
-        zlib1g \
-        zlib1g-dev
-WORKDIR /
-# Clone Verilator repo and perform build.
-RUN git clone --depth 1 -b v5.024 https://github.com/verilator/verilator
-WORKDIR verilator
-RUN mkdir install
-RUN autoconf \
-    && ./configure --prefix=/verilator/install \
-    && make -j `nproc` \
-    && make install
 
 # Build Sonata simulator and boot stub.
 FROM ubuntu:24.04 AS sonata-build
@@ -297,6 +305,7 @@ COPY --from=cheriot-safe-build "cheriot-safe/sim/verilator/SBOM-cheriot-safe.jso
 COPY --from=mpact-build "/mpact-cheriot/SBOM-mpact-cheriot.json" "/cheriot-tools/sbom/"
 COPY --from=sonata-build "/sonata-system/SBOM-sonata-system.json" "/cheriot-tools/sbom/"
 COPY --from=rust-build "/cheri-rust/SBOM-cheri-rust.json" "/cheriot-tools/sbom/"
+COPY --from=verilator-build "/verilator/SBOM-verilator.json" "/cheriot-tools/sbom/"
 RUN jq -s '.' /cheriot-tools/sbom/SBOM-*.json > /cheriot-tools/sbom.json
 
 ##########################################
