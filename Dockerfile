@@ -21,7 +21,14 @@ RUN jq -n \
         --arg origin "$(git remote get-url origin)" \
         --arg commit "$(git rev-parse HEAD)" \
         '{component: $component, origin: $origin, commit: $commit}' \
-    > SBOM-cheriot-sail.json
+    > /cheriot-sail/SBOM-cheriot-sail.json
+WORKDIR /cheriot-sail/sail-riscv
+RUN jq -n \
+        --arg component "sail-riscv" \
+        --arg origin "$(git remote get-url origin)" \
+        --arg commit "$(git rev-parse HEAD)" \
+        '{component: $component, origin: $origin, commit: $commit}' \
+    > /cheriot-sail/SBOM-sail-riscv.json
 
 # Build OpenOCD
 FROM ubuntu:24.04 AS openocd-build
@@ -282,7 +289,7 @@ RUN apt-get update && \
         ca-certificates \
         jq
 RUN mkdir -p /cheriot-tools/sbom
-COPY --from=sail-build "/cheriot-sail/SBOM-cheriot-sail.json" "/cheriot-tools/sbom/"
+COPY --from=sail-build "/cheriot-sail/SBOM-cheriot-sail.json" "/cheriot-sail/SBOM-sail-riscv.json" "/cheriot-tools/sbom/"
 COPY --from=openocd-build "openocd/SBOM-openocd.json" "/cheriot-tools/sbom/"
 COPY --from=llvm-build "/Build/SBOM-llvm-project.json" "/cheriot-tools/sbom/"
 COPY --from=cheriot-audit "/cheriot-audit/build/SBOM-cheriot-audit.json" "/cheriot-tools/sbom/"
