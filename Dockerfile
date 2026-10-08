@@ -274,16 +274,18 @@ RUN apt-get update && \
         ninja-build \
         perl \
         pkg-config \
-        python3
+        python3 \
+        rustc
 RUN git clone --depth 1 https://github.com/cheriot-platform/cheri-rust
 # TODO: use config from source (needs https://github.com/CHERIoT-Platform/cheri-rust/pull/160)
 COPY rust-config.toml /cheri-rust/bootstrap.toml
+RUN  echo "\ntarget = [\"riscv32cheriot-unknown-cheriotrtos\", \"$(rustc --version --verbose | grep host | sed -e 's/^host: //')\"]" >> /cheri-rust/bootstrap.toml
 WORKDIR /cheri-rust
 RUN ./x build llvm
-RUN ./x build rustc --target=riscv32cheriot-unknown-cheriotrtos --stage=2
-RUN ./x build std --target=riscv32cheriot-unknown-cheriotrtos --stage=2
-RUN ./x build cargo --target=riscv32cheriot-unknown-cheriotrtos --stage=2
-RUN ./x install rustc std cargo --target=riscv32cheriot-unknown-cheriotrtos
+RUN ./x build rustc  --stage=2
+RUN ./x build std  --stage=2
+RUN ./x build cargo --stage=2
+RUN ./x install rustc std cargo
 RUN jq -n \
         --arg component "cheri-rust" \
         --arg origin "$(git remote get-url origin)" \
