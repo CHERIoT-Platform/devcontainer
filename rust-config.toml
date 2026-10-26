@@ -32,3 +32,4 @@ std-features = ["compiler-builtins-mem"]
 strip = true
 dist-src = false
 optimize = "z"
+omit-git-hash = false
